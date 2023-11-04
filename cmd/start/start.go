@@ -28,6 +28,11 @@ var Command = &cli.Command{
 				return (nil)
 			},
 		},
+		&cli.BoolFlag{
+			Name:               "idempotent",
+			Usage:              "Don't return error if VM is already in requested state",
+			Value:              false,
+		},
 	},
 }
 
@@ -66,8 +71,19 @@ func startVm(c *cli.Context) error {
 		}
 	}
 
-if vm == nil {
+	if vm == nil {
 		return fmt.Errorf("no vm with id found: %d", c.Uint64("vmid"))
+	}
+
+	if vm.Status == "running" {
+		msg := fmt.Sprintf("VM %d already in requested state (%s)", vm.VMID, vm.Status)
+		switch c.Bool("idempotent") {
+		case true:
+			logrus.Warn(msg)
+			return nil
+		case false:
+			return fmt.Errorf(msg)
+		}
 	}
 
 	task, err := vm.Start(context.Background())
