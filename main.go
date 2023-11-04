@@ -35,7 +35,7 @@ func main() {
 				Name: "pverealm",
 				Aliases: []string{"r"},
 				Value: "",
-				Usage: "Proxmox VE password",
+				Usage: "Proxmox VE authentication realm",
 				EnvVars: []string{"PVE_REALM"},
 			},
 			&cli.StringFlag{
