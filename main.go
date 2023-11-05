@@ -9,7 +9,8 @@ import (
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 	"github.com/urfave/cli/v2"
 )
-const URL_SUFFIX = "/api2/json"
+
+
 func main() {
 	app := &cli.App{
 		Name:     "gomox",
@@ -17,48 +18,49 @@ func main() {
 		Commands: cmd.Commands(),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name: "pveuser",
+				Name:    "pveuser",
 				Aliases: []string{"u"},
-				Value: "",
-				Usage: "Proxmox VE username",
+				Value:   "",
+				Usage:   "Proxmox VE username",
 				EnvVars: []string{"PVE_USER"},
 			},
 			&cli.StringFlag{
-				Name: "pvepassword",
+				Name:    "pvepassword",
 				Aliases: []string{"p"},
-				Value: "",
-				Usage: "Proxmox VE password",
+				Value:   "",
+				Usage:   "Proxmox VE password",
 				EnvVars: []string{"PVE_PASSWORD"},
 			},
 			&cli.StringFlag{
-				Name: "pverealm",
+				Name:    "pverealm",
 				Aliases: []string{"r"},
-				Value: "",
-				Usage: "Proxmox VE authentication realm",
+				Value:   "",
+				Usage:   "Proxmox VE authentication realm",
 				EnvVars: []string{"PVE_REALM"},
 			},
 			&cli.StringFlag{
-				Name: "pveurl",
-				Value: "https://127.0.0.1:8006/api2/json",
-				Usage: "Proxmox VE API URL",
+				Name:    "pveurl",
+				Usage:   "Proxmox VE API URL",
+				Value:   "", //https://127.0.0.1:8006/api2/json",
 				EnvVars: []string{"PVE_URL"},
 			},
 			&cli.StringFlag{
-				Name: "scheme",
+				Name:  "scheme",
 				Value: "https",
 				Usage: "API connection scheme (http or https)",
+				EnvVars: []string{"PVE_URI_SCHEME"},
 			},
 			&cli.StringFlag{
-				Name: "pvehost",
+				Name:    "pvehost",
 				Aliases: []string{"a"},
-				Value: "127.0.0.1",
-				Usage: "Proxmox VE hostname/IP address",
+				Value:   "127.0.0.1",
+				Usage:   "Proxmox VE hostname/IP address",
 				EnvVars: []string{"PVE_HOST"},
 			},
 			&cli.UintFlag{
-				Name: "pveport",
-				Value: 8006,
-				Usage: "Proxmox VE API port",
+				Name:    "pveport",
+				Value:   8006,
+				Usage:   "Proxmox VE API port",
 				EnvVars: []string{"PVE_PORT"},
 			},
 			&cli.BoolFlag{
@@ -70,6 +72,11 @@ func main() {
 				Name:    "quiet",
 				Aliases: []string{"q"},
 				Usage:   "Turn on off all logging",
+			},
+			&cli.BoolFlag{
+				Name:  "idempotent",
+				Usage: "Don't return error if VM is already in requested state",
+				Value: false,
 			},
 		},
 		Before: func(ctx *cli.Context) error {
