@@ -23,6 +23,16 @@
             "envFile": "${workspaceFolder}/.env",
             "args": "stop --vmid 105"
 
+        },
+        {
+            "name": "Run `clone --vmid 8600` command",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "args": "clone --vmid 8600"
+
         }
     ]
 }

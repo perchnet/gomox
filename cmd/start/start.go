@@ -15,7 +15,7 @@ import (
 
 var Command = &cli.Command{
 	Name:   "start",
-	Usage:  "Start a virtual machine",
+	Usage:  "start a virtual machine",
 	Action: startVm,
 	Flags: []cli.Flag{
 		&cli.Uint64Flag{
@@ -35,7 +35,6 @@ var Command = &cli.Command{
 
 // Starts a Proxmox VM as specified by the `vmid` arg
 func startVm(c *cli.Context) error {
-
 
 	client := clientinstantiator.InstantiateClient(
 		pveurl.GetPveUrl(c),

@@ -6,6 +6,8 @@ import (
 
 	"github.com/b-/gomox-uf/internal/clientinstantiator"
 	"github.com/b-/gomox-uf/internal/pveurl"
+	"github.com/b-/gomox-uf/internal/resourcesgetter"
+	"github.com/b-/gomox-uf/internal/staterequester"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -34,6 +36,7 @@ var Command = &cli.Command{
 }
 
 func stopVm(c *cli.Context) error {
+	requestedState := proxmox.StatusVirtualMachineStopped
 	client := clientinstantiator.InstantiateClient(
 		pveurl.GetPveUrl(c),
 		proxmox.Credentials{
@@ -42,50 +45,27 @@ func stopVm(c *cli.Context) error {
 			Realm:    c.String("pverealm"),
 	},
 )
+	vmid := c.Uint64("vmid")
 
-	cluster, err := client.Cluster(c.Context)
+	vm,err := resourcesgetter.GetVirtualMachineByVMID(vmid, client, c.Context)
 	if err != nil {
 		return err
 	}
 
-	resources, err := cluster.Resources(c.Context, "vm")
-	if err != nil {
-		return err
-	}
-
-	var vm *proxmox.VirtualMachine
-	for _, rs := range resources {
-		if rs.VMID == c.Uint64("vmid") {
-			node, err := client.Node(c.Context, rs.Node)
-			if err != nil {
-				return err
-			}
-			vm, err = node.VirtualMachine(c.Context, int(rs.VMID))
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if vm == nil {
-		return fmt.Errorf("no vm with id found: %d", c.Uint64("vmid"))
-	}
-
-	if vm.Status == "stopped" {
+	if vm.IsStopped() {
 		msg := fmt.Sprintf("VM %d already in requested state (%s)", vm.VMID, vm.Status)
 		switch c.Bool("idempotent") {
-		case true:
-			logrus.Warn(msg)
-			return nil
-		case false:
-			return fmt.Errorf(msg)
+			case true:
+				logrus.Warn(msg)
+				return nil
+			case false:
+				return fmt.Errorf(msg)
 		}
 	}
-
-	task, err := vm.Stop(context.Background())
+	task, err := staterequester.RequestState(staterequester.RequestableState(requestedState), vmid, client, context.Background())
 	if err != nil {
 		return err
 	}
-	logrus.Info(fmt.Sprintf("stopvm called! (vm: %#v, task: %#v)", vm, task))
+	logrus.Info(fmt.Sprintf("state requested! %#v", task))
 	return nil
 }
