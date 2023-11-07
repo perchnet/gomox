@@ -1,13 +1,16 @@
-package resourcesgetter
+package internal
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/luthermonson/go-proxmox"
-	)
+)
 
-func GetVirtualMachineByVMID(vmid uint64, client proxmox.Client, c context.Context) (vm *proxmox.VirtualMachine, err error) {
+func GetVirtualMachineByVMID(vmid uint64, client proxmox.Client, c context.Context) (
+	vm *proxmox.VirtualMachine,
+	err error,
+) {
 
 	cluster, err := client.Cluster(c)
 	if err != nil {

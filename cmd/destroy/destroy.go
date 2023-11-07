@@ -67,7 +67,7 @@ func destroyVmCmd(c *cli.Context) error {
 		}
 	}
 	if vm.IsStopped() {
-		task, err := DestroyVm(StateRequestParams{RequestedState: StoppedState, Vm: vm}, context.Background())
+		task, err := DestroyVm(vm, context.Background())
 		if err != nil {
 			return err
 		}

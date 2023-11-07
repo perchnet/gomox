@@ -8,16 +8,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type DestroyParams struct {
-	RequestedState RequestableState
-	Vm             *proxmox.VirtualMachine
-}
-
-func DestroyVm(params DestroyParams, ctx context.Context) (*proxmox.Task, error) {
-	task, err := params.Vm.Delete(ctx)
+func DestroyVm(vm *proxmox.VirtualMachine, ctx context.Context) (*proxmox.Task, error) {
+	task, err := vm.Delete(ctx)
 	if err != nil {
 		return nil, err
 	}
 	logrus.Info(fmt.Sprintf("deletion requested! %#v", task))
 	return task, nil
+}
+
+func DestroyVmWithForce(vm *proxmox.VirtualMachine, ctx context.Context) (*proxmox.Task, error) {
+	/*
+		task, err := vm.Stop(ctx)
+		task, err := vm.Delete(ctx)
+		if err != nil {
+			return nil, err
+		}
+		logrus.Info(fmt.Sprintf("deletion requested! %#v", task))
+		return task, nil
+	*/
+	return nil, fmt.Errorf(
+		"Force deletion requested for VM %d.\n"+
+			"Not implemented.", vm.VMID,
+	)
 }

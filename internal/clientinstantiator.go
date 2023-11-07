@@ -1,4 +1,4 @@
-package clientinstantiator
+package internal
 
 import (
 	"github.com/luthermonson/go-proxmox"
