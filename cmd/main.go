@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/b-/gomox-uf/cmd/clone"
+	"github.com/b-/gomox-uf/cmd/destroy"
 	"github.com/b-/gomox-uf/cmd/pveVersion"
 	"github.com/b-/gomox-uf/cmd/start"
 	"github.com/b-/gomox-uf/cmd/stop"
@@ -14,5 +15,6 @@ func Commands() cli.Commands {
 		stop.Command,
 		pveVersion.Command,
 		clone.Command,
+		destroy.Command,
 	}
 }

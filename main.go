@@ -10,7 +10,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-
 func main() {
 	app := &cli.App{
 		Name:     "gomox",
@@ -41,13 +40,13 @@ func main() {
 			&cli.StringFlag{
 				Name:    "pveurl",
 				Usage:   "Proxmox VE API URL",
-				Value:   "", //https://127.0.0.1:8006/api2/json",
+				Value:   "", // https://127.0.0.1:8006/api2/json",
 				EnvVars: []string{"PVE_URL"},
 			},
 			&cli.StringFlag{
-				Name:  "scheme",
-				Value: "https",
-				Usage: "API connection scheme (http or https)",
+				Name:    "scheme",
+				Value:   "https",
+				Usage:   "API connection scheme (http or https)",
 				EnvVars: []string{"PVE_URI_SCHEME"},
 			},
 			&cli.StringFlag{
@@ -73,20 +72,17 @@ func main() {
 				Aliases: []string{"q"},
 				Usage:   "Turn on off all logging",
 			},
-			&cli.BoolFlag{
-				Name:  "idempotent",
-				Usage: "Don't return error if VM is already in requested state",
-				Value: false,
-			},
 		},
 		Before: func(ctx *cli.Context) error {
 			if ctx.Bool("debug") {
 				logrus.SetLevel(logrus.DebugLevel)
 			} else {
 				// treat logrus like fmt.Print
-				logrus.SetFormatter(&easy.Formatter{
-					LogFormat: "%msg%",
-				})
+				logrus.SetFormatter(
+					&easy.Formatter{
+						LogFormat: "%msg%",
+					},
+				)
 			}
 			if ctx.Bool("quiet") {
 				logrus.SetOutput(io.Discard)

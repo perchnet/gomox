@@ -1,4 +1,4 @@
-package pveurl
+package internal
 
 import (
 	"fmt"
