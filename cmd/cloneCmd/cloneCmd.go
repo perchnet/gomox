@@ -10,6 +10,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+//goland:noinspection SpellCheckingInspection
 var Command = &cli.Command{
 	Name:   "clone",
 	Usage:  "Clone a virtual machine",
