@@ -1,4 +1,4 @@
-package clone
+package cloneCmd
 
 import (
 	"context"
@@ -86,13 +86,6 @@ var Command = &cli.Command{
 	},
 }
 
-func bool2uint(b bool) uint {
-	if b {
-		return 1
-	}
-	return 0
-}
-
 func bool2uint8(b bool) uint8 {
 	if b {
 		return 1
@@ -121,38 +114,83 @@ func cloneVm(c *cli.Context) error {
 			Realm:    c.String("pverealm"),
 		},
 	)
-	vmid := c.Uint64("vmid")
-	newid := c.Uint64("newid")
+	vmid, newId := c.Uint64("vmid"), c.Uint64("newid")
 	vm, err := internal.GetVirtualMachineByVMID(vmid, client, c.Context)
 	if err != nil {
 		return err
 	}
 
-	if newid != 0 { // if we're manually assigning the target VMID
-		// check if VM already exists with target VMID
-		vm, _ := internal.GetVirtualMachineByVMID(newid, client, c.Context)
-		if vm != nil {
-			logrus.Infof("Virtual machine with target ID %d already exists.\n", newid)
+	if newId != 0 { // if we're manually assigning the target VMID
+		vmWithSameId, _ := internal.GetVirtualMachineByVMID(
+			newId,
+			client,
+			c.Context,
+		) // check if VM already exists with target VMID
+		if vmWithSameId != nil {
+			logrus.Infof("Virtual machine with target ID %d already exists.\n", newId)
 			switch c.Bool("overwrite") {
 			case true:
 				logrus.Infof("Overwrite requested.\n")
-				task, err := internal.DestroyVm(vm, context.Background())
-				logrus.Infof("Overwrite requested. Destroying VM %#v.\n%#v", vm, task)
-				// need to wait for completion...
+				task, err := internal.DestroyVm(vmWithSameId, context.Background())
 				if err != nil {
-					logrus.Panicf("Shit!")
+					return err
 				}
+				logrus.Info("Overwrite requested.")
+				logrus.Warnf("Destroying VM %#v.\n%#v\n", vmWithSameId, task)
+
+				if c.Bool("quiet") {
+					internal.QuietWaitTask(
+						task,
+						internal.DefaultPollInterval,
+						c.Context,
+					)
+				} else {
+					internal.TailTaskStatus(
+						task,
+						internal.DefaultPollInterval,
+						c.Context,
+					)
+				}
+
+				logrus.Infof("task: %#v\n", task)
 			case false:
-				logrus.Panicf("Use --overwrite if necessary.\n")
+				return fmt.Errorf(
+					"Virtual machine with target ID %d already exists.\n"+
+						"Use --overwrite if necessary.\n"+
+						"%#v",
+					newId, vmWithSameId,
+				)
 			}
 
 		}
 	}
 
-	outvmid, task, err := vm.Clone(context.Background(), &cloneOptions)
+	outVmid, task, err := vm.Clone(context.Background(), &cloneOptions)
 	if err != nil {
-		logrus.Panic("Oh no! ", err)
+		return err
 	}
-	logrus.Infof("clone requested! new id: %d.\n%#v\n", outvmid, task)
+
+	err = task.Ping(context.Background())
+	if err != nil {
+		return err
+	}
+
+	logrus.Infof("clone requested! new id: %d.\n%#v\n", outVmid, task)
+	if c.Bool("wait") {
+		if c.Bool("quiet") {
+			internal.QuietWaitTask(
+				task,
+				internal.DefaultPollInterval,
+				c.Context,
+			)
+		} else {
+			internal.TailTaskStatus(
+				task,
+				internal.DefaultPollInterval,
+				c.Context,
+			)
+		}
+	}
+
 	return nil
 }

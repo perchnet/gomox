@@ -66,11 +66,24 @@ func main() {
 				Name:    "debug",
 				Aliases: []string{"d"},
 				Usage:   "Turn on verbose debug logging",
+				EnvVars: []string{"DEBUG"},
 			},
 			&cli.BoolFlag{
 				Name:    "quiet",
 				Aliases: []string{"q"},
 				Usage:   "Turn on off all logging",
+			},
+			&cli.BoolFlag{
+				Name:     "wait",
+				Usage:    "Wait for task completion.",
+				Category: "wait",
+				Aliases: []string{
+					"watch", "w",
+					"tail",
+					"follow", "f",
+					// I always forget what arg does that in a given cli app...
+					// so I'll just sort of let you pick which keyword to use :)
+				},
 			},
 		},
 		Before: func(ctx *cli.Context) error {

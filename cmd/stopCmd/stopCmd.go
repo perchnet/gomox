@@ -1,10 +1,10 @@
-package stop
+package stopCmd
 
 import (
 	"context"
 	"fmt"
 
-	. "github.com/b-/gomox-uf/internal"
+	"github.com/b-/gomox-uf/internal"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -16,12 +16,10 @@ var Command = &cli.Command{
 	Action: stopVm,
 	Flags: []cli.Flag{
 		&cli.Uint64Flag{
-			Name:        "vmid",
-			DefaultText: "",
-			FilePath:    "",
-			Usage:       "`VMID` to stop",
-			Required:    true,
-			Aliases:     []string{"v"},
+			Name:     "vmid",
+			Usage:    "`VMID` to stop",
+			Required: true,
+			Aliases:  []string{"v"},
 			Action: func(c *cli.Context, vmid uint64) error {
 				if vmid < 100 || vmid > 999999999 {
 					return fmt.Errorf("VM vmid %d out of range", vmid)
@@ -38,9 +36,9 @@ var Command = &cli.Command{
 }
 
 func stopVm(c *cli.Context) error {
-	requestedState := RequestableState(proxmox.StatusVirtualMachineStopped)
-	client := InstantiateClient(
-		GetPveUrl(c),
+	requestedState := internal.RequestableState(proxmox.StatusVirtualMachineStopped)
+	client := internal.InstantiateClient(
+		internal.GetPveUrl(c),
 		proxmox.Credentials{
 			Username: c.String("pveuser"),
 			Password: c.String("pvepassword"),
@@ -49,7 +47,7 @@ func stopVm(c *cli.Context) error {
 	)
 	vmid := c.Uint64("vmid")
 
-	vm, err := GetVirtualMachineByVMID(vmid, client, c.Context)
+	vm, err := internal.GetVirtualMachineByVMID(vmid, client, c.Context)
 	if err != nil {
 		return err
 	}
@@ -64,10 +62,19 @@ func stopVm(c *cli.Context) error {
 			return fmt.Errorf(msg)
 		}
 	}
-	task, err := RequestState(StateRequestParams{RequestedState: requestedState, Vm: vm}, context.Background())
+	task, err := internal.RequestState(
+		internal.StateRequestParams{RequestedState: requestedState, Vm: vm},
+		context.Background(),
+	)
 	if err != nil {
 		return err
 	}
+
+	err = task.Ping(context.Background())
+	if err != nil {
+		return err
+	}
+
 	logrus.Info(fmt.Sprintf("state requested! %#v", task))
 	return nil
 }

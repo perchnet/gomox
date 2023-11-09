@@ -1,4 +1,4 @@
-package destroy
+package destroyCmd
 
 import (
 	"context"
@@ -75,6 +75,9 @@ func destroyVmCmd(c *cli.Context) error {
 			"Deletion requested!\n"+
 				"%#v", task,
 		)
+		if c.Bool("wait") {
+
+		}
 		return nil
 	} else {
 		if c.Bool("force") {

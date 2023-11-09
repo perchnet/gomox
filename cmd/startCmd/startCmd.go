@@ -1,4 +1,4 @@
-package start
+package startCmd
 
 import (
 	"context"

@@ -13,6 +13,10 @@ func DestroyVm(vm *proxmox.VirtualMachine, ctx context.Context) (*proxmox.Task, 
 	if err != nil {
 		return nil, err
 	}
+	err = task.Ping(context.Background())
+	if err != nil {
+		return task, err
+	}
 	logrus.Info(fmt.Sprintf("deletion requested! %#v", task))
 	return task, nil
 }
