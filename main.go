@@ -1,10 +1,10 @@
-package main
+package gomox
 
 import (
 	"io"
 	"os"
 
-	"github.com/b-/gomox-uf/cmd"
+	"github.com/b-/gomox/cmd"
 	"github.com/sirupsen/logrus"
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 	"github.com/urfave/cli/v2"

@@ -1,4 +1,4 @@
-package internal
+package gomox
 
 import (
 	"fmt"
@@ -8,8 +8,10 @@ import (
 
 const ApiUrlSuffix = "/api2/json"
 
-// GetPveUrl returns either the URL as specified by the `pveurl` arg,
-// or builds a URL from the `scheme`, `pvehost`, and `pveport` args.
+/*
+GetPveUrl returns either the URL as specified by the `pveurl` arg,
+or builds a URL from the `scheme`, `pvehost`, and `pveport` args.
+*/
 func GetPveUrl(c *cli.Context) string {
 	var ret string
 	pveurl := c.String("pveurl")

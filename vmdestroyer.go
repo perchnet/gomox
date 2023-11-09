@@ -1,4 +1,4 @@
-package internal
+package gomox
 
 import (
 	"context"
@@ -33,6 +33,6 @@ func DestroyVmWithForce(vm *proxmox.VirtualMachine, ctx context.Context) (*proxm
 	*/
 	return nil, fmt.Errorf(
 		"Force deletion requested for VM %d.\n"+
-			"Not implemented.", vm.VMID,
+			/*TODO:*/ "Not implemented.", vm.VMID,
 	)
 }

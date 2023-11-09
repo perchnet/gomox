@@ -1,10 +1,9 @@
-package startCmd
+package start
 
 import (
 	"context"
 	"fmt"
 
-	. "github.com/b-/gomox-uf/internal"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"

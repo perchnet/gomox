@@ -1,4 +1,4 @@
-package internal
+package tasks
 
 import (
 	"context"
@@ -16,26 +16,18 @@ const (
 	dockerComposeSpinnerCharSet = 14
 	japaneseSpinnerCharSet      = 25
 	oOoSpinnerCharSet           = 28
+	spinnerSpeed                = 100 * time.Millisecond
 )
 
 // var spinnerType = spinner.CharSets[classicSpinnerCharSet]
 var spinnerType = spinner.CharSets[oOoSpinnerCharSet]
 
-func TaskStatus(task proxmox.Task, ctx context.Context) (string, error) {
-	err := task.Ping(ctx)           // Update task.
-	msg := fmt.Sprintf("%#v", task) // TODO: Improve task status formatting
-	if task.IsFailed {
-		err = fmt.Errorf("the task has failed")
-	}
-	return msg, err
-}
-
 // TailTaskStatus waits for a task to complete, displaying a spinner with status messages as it progresses.
 func TailTaskStatus(task *proxmox.Task, interval time.Duration, ctx context.Context) error {
 	// every interval seconds
-	s := spinner.New(spinnerType, 100*time.Millisecond) // Build our new spinner
-	s.Start()                                           // Start the spinner
-	taskStatus, err := TaskStatus(*task, ctx)           // init vars, get initial task status
+	s := spinner.New(spinnerType, spinnerSpeed) // Build our new spinner
+	s.Start()                                   // Start the spinner
+	taskStatus, err := TaskStatus(*task, ctx)   // init vars, get initial task status
 	if err != nil {
 		return err
 	}
@@ -55,15 +47,33 @@ func TailTaskStatus(task *proxmox.Task, interval time.Duration, ctx context.Cont
 			time.Sleep(interval)
 		} else { // task is not running
 			s.Stop()
-			break
-			return err // escape the loop
+			break // escape the loop
 		}
 
 	}
 	return fmt.Errorf("We shouldn't end up here...\n")
 }
 
+// TaskStatus updates the task and returns a message explaining the task's status
+func TaskStatus(task proxmox.Task, ctx context.Context) (string, error) {
+	err := task.Ping(ctx)           // Update task.
+	msg := fmt.Sprintf("%#v", task) // TODO: Improve task status formatting
+	if task.IsFailed {
+		err = fmt.Errorf("the task has failed")
+	}
+	return msg, err
+}
+
 // QuietWaitTask silently waits for a task to complete, without spawning a spinner.
+/* Usage example:
+err := tasks.QuietWaitTask(
+	task,
+	tasks.DefaultPollInterval,
+	c.Context,
+)
+if err != nil {
+	return err
+*/
 func QuietWaitTask(task *proxmox.Task, interval time.Duration, ctx context.Context) error {
 	taskStatus, err := TaskStatus(*task, ctx) // init vars, get initial task status
 	if err != nil {
@@ -78,8 +88,7 @@ func QuietWaitTask(task *proxmox.Task, interval time.Duration, ctx context.Conte
 		if task.IsRunning {
 			time.Sleep(interval)
 		} else { // task is not running
-			break
-			return err // escape the loop
+			break // escape the loop
 		}
 
 	}

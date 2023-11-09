@@ -1,9 +1,8 @@
-package taskStatusCmd
+package taskStatus
 
 import (
 	"time"
 
-	. "github.com/b-/gomox-uf/internal"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"

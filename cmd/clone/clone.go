@@ -1,10 +1,11 @@
-package cloneCmd
+package clone
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/b-/gomox-uf/internal"
+	"github.com/b-/gomox"
+	"github.com/b-/gomox/tasks"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -50,7 +51,7 @@ var Command = &cli.Command{
 		},
 		&cli.StringFlag{
 			Name:  "description",
-			Usage: "Description for the new vm.",
+			Usage: "Description for the new VM.",
 		},
 		&cli.StringFlag{
 			Name:  "format",
@@ -107,8 +108,8 @@ func cloneVm(c *cli.Context) error {
 		Target:   c.String("target"),
 	}
 
-	client := internal.InstantiateClient(
-		internal.GetPveUrl(c),
+	client := gomox.InstantiateClient(
+		gomox.GetPveUrl(c),
 		proxmox.Credentials{
 			Username: c.String("pveuser"),
 			Password: c.String("pvepassword"),
@@ -116,13 +117,13 @@ func cloneVm(c *cli.Context) error {
 		},
 	)
 	vmid, newId := c.Uint64("vmid"), c.Uint64("newid")
-	vm, err := internal.GetVirtualMachineByVMID(vmid, client, c.Context)
+	vm, err := gomox.GetVirtualMachineByVMID(vmid, client, c.Context)
 	if err != nil {
 		return err
 	}
 
 	if newId != 0 { // if we're manually assigning the target VMID
-		vmWithSameId, _ := internal.GetVirtualMachineByVMID(
+		vmWithSameId, _ := gomox.GetVirtualMachineByVMID(
 			newId,
 			client,
 			c.Context,
@@ -132,7 +133,7 @@ func cloneVm(c *cli.Context) error {
 			switch c.Bool("overwrite") {
 			case true:
 				logrus.Infof("Overwrite requested.\n")
-				task, err := internal.DestroyVm(vmWithSameId, context.Background())
+				task, err := gomox.DestroyVm(vmWithSameId, context.Background())
 				if err != nil {
 					return err
 				}
@@ -140,18 +141,18 @@ func cloneVm(c *cli.Context) error {
 				logrus.Warnf("Destroying VM %#v.\n%#v\n", vmWithSameId, task)
 
 				if c.Bool("quiet") {
-					err := internal.QuietWaitTask(
+					err := tasks.QuietWaitTask(
 						task,
-						internal.DefaultPollInterval,
+						tasks.DefaultPollInterval,
 						c.Context,
 					)
 					if err != nil {
 						return err
 					}
 				} else {
-					err := internal.TailTaskStatus(
+					err := tasks.TailTaskStatus(
 						task,
-						internal.DefaultPollInterval,
+						tasks.DefaultPollInterval,
 						c.Context,
 					)
 					if err != nil {
@@ -185,18 +186,18 @@ func cloneVm(c *cli.Context) error {
 	logrus.Infof("clone requested! new id: %d.\n%#v\n", outVmid, task)
 	if c.Bool("wait") {
 		if c.Bool("quiet") {
-			err := internal.QuietWaitTask(
+			err := tasks.QuietWaitTask(
 				task,
-				internal.DefaultPollInterval,
+				tasks.DefaultPollInterval,
 				c.Context,
 			)
 			if err != nil {
 				return err
 			}
 		} else {
-			err := internal.TailTaskStatus(
+			err := tasks.TailTaskStatus(
 				task,
-				internal.DefaultPollInterval,
+				tasks.DefaultPollInterval,
 				c.Context,
 			)
 			if err != nil {

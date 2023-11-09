@@ -1,8 +1,9 @@
-module github.com/b-/gomox-uf
+module github.com/b-/gomox
 
 go 1.21.3
 
 require (
+	github.com/briandowns/spinner v1.23.0
 	github.com/luthermonson/go-proxmox v0.0.0-beta1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
@@ -10,7 +11,6 @@ require (
 )
 
 require (
-	github.com/briandowns/spinner v1.23.0 // indirect
 	github.com/buger/goterm v1.0.4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/diskfs/go-diskfs v1.4.0 // indirect

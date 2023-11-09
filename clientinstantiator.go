@@ -1,4 +1,4 @@
-package internal
+package gomox
 
 import (
 	"github.com/luthermonson/go-proxmox"
@@ -6,7 +6,8 @@ import (
 
 func InstantiateClient(pveurl string, credentials proxmox.Credentials) proxmox.Client {
 
-	client := proxmox.NewClient(pveurl,
+	client := proxmox.NewClient(
+		pveurl,
 		proxmox.WithCredentials(&credentials),
 	)
 	return *client

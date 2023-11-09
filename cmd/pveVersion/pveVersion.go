@@ -1,9 +1,9 @@
-package pveVersionCmd
+package pveVersion
 
 import (
 	"context"
 
-	"github.com/b-/gomox-uf/internal"
+	"github.com/b-/gomox"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -17,8 +17,8 @@ var Command = &cli.Command{
 }
 
 func pveVersion(c *cli.Context) error {
-	client := internal.InstantiateClient(
-		internal.GetPveUrl(c),
+	client := gomox.InstantiateClient(
+		gomox.GetPveUrl(c),
 		proxmox.Credentials{
 			Username: c.String("pveuser"),
 			Password: c.String("pvepassword"),

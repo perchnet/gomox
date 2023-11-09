@@ -1,10 +1,10 @@
-package stopCmd
+package stop
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/b-/gomox-uf/internal"
+	"github.com/b-/gomox"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -36,9 +36,9 @@ var Command = &cli.Command{
 }
 
 func stopVm(c *cli.Context) error {
-	requestedState := internal.RequestableState(proxmox.StatusVirtualMachineStopped)
-	client := internal.InstantiateClient(
-		internal.GetPveUrl(c),
+	requestedState := gomox.RequestableState(proxmox.StatusVirtualMachineStopped)
+	client := gomox.InstantiateClient(
+		gomox.GetPveUrl(c),
 		proxmox.Credentials{
 			Username: c.String("pveuser"),
 			Password: c.String("pvepassword"),
@@ -47,7 +47,7 @@ func stopVm(c *cli.Context) error {
 	)
 	vmid := c.Uint64("vmid")
 
-	vm, err := internal.GetVirtualMachineByVMID(vmid, client, c.Context)
+	vm, err := gomox.GetVirtualMachineByVMID(vmid, client, c.Context)
 	if err != nil {
 		return err
 	}
@@ -62,8 +62,8 @@ func stopVm(c *cli.Context) error {
 			return fmt.Errorf(msg)
 		}
 	}
-	task, err := internal.RequestState(
-		internal.StateRequestParams{RequestedState: requestedState, Vm: vm},
+	task, err := gomox.RequestState(
+		gomox.StateRequestParams{RequestedState: requestedState, Vm: vm},
 		context.Background(),
 	)
 	if err != nil {
