@@ -1,6 +1,4 @@
-#.idea
 vendor
-vendor/**/*
 *.DS_Store
 .env
 *go.work
