@@ -139,17 +139,23 @@ func cloneVm(c *cli.Context) error {
 				logrus.Warnf("Destroying VM %#v.\n%#v\n", vmWithSameId, task)
 
 				if c.Bool("quiet") {
-					internal.QuietWaitTask(
+					err := internal.QuietWaitTask(
 						task,
 						internal.DefaultPollInterval,
 						c.Context,
 					)
+					if err != nil {
+						return err
+					}
 				} else {
-					internal.TailTaskStatus(
+					err := internal.TailTaskStatus(
 						task,
 						internal.DefaultPollInterval,
 						c.Context,
 					)
+					if err != nil {
+						return err
+					}
 				}
 
 				logrus.Infof("task: %#v\n", task)
@@ -178,17 +184,23 @@ func cloneVm(c *cli.Context) error {
 	logrus.Infof("clone requested! new id: %d.\n%#v\n", outVmid, task)
 	if c.Bool("wait") {
 		if c.Bool("quiet") {
-			internal.QuietWaitTask(
+			err := internal.QuietWaitTask(
 				task,
 				internal.DefaultPollInterval,
 				c.Context,
 			)
+			if err != nil {
+				return err
+			}
 		} else {
-			internal.TailTaskStatus(
+			err := internal.TailTaskStatus(
 				task,
 				internal.DefaultPollInterval,
 				c.Context,
 			)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
