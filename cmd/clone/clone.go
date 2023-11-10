@@ -1,7 +1,6 @@
 package clone
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/b-/gomox/tasks"
@@ -132,7 +131,7 @@ func cloneVm(c *cli.Context) error {
 			logrus.Infof("Virtual machine with target ID %d already exists.\n", newId)
 			switch c.Bool("overwrite") {
 			case true:
-				task, err := util.DestroyVm(vmWithSameId, context.Background())
+				task, err := util.DestroyVm(vmWithSameId, c.Context)
 				if err != nil {
 					return err
 				}
@@ -156,12 +155,12 @@ func cloneVm(c *cli.Context) error {
 		}
 	}
 
-	outVmid, task, err := vm.Clone(context.Background(), &cloneOptions) // do the clone
+	outVmid, task, err := vm.Clone(c.Context, &cloneOptions) // do the clone
 	if err != nil {
 		return err
 	}
 
-	err = task.Ping(context.Background()) // update task
+	err = task.Ping(c.Context) // update task
 	if err != nil {
 		return err
 	}
