@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -22,20 +23,24 @@ const (
 
 // TailTaskStatus waits for a task to complete, displaying a spinner with status
 // messages as it progresses.
-func TailTaskStatus(task proxmox.Task, interval time.Duration, ctx context.Context) error {
-	// every interval seconds
+// If `interval` is 0s, it will be set to DefaultPollInterval. TODO: implement options
+func TailTaskStatus(ctx context.Context, task proxmox.Task, interval time.Duration) error {
+	if interval == time.Duration(0) {
+		interval = DefaultPollInterval
+	}
 	s := spinner.New(spinner.CharSets[spinnerCharSet], spinnerSpeed) // Build our new spinner
 	s.Start()                                                        // Start the spinner
-	taskStatus, err := TaskStatus(&task, ctx)                        // init vars, get initial task status
+	taskStatus, err := TaskStatus(ctx, &task)                        // init vars, get initial task status
 	lastTaskStatus := taskStatus
 	if err != nil {
 		return err
 	}
 	logrus.Info(taskStatus, "\n")
 	s.Suffix = taskStatus // update spinner text
-	for {                 // loop
+	// every interval seconds
+	for { // loop
 		lastTaskStatus = taskStatus
-		taskStatus, err = TaskStatus(&task, ctx) // get new task status
+		taskStatus, err = TaskStatus(ctx, &task) // get new task status
 		if err != nil {
 			return err
 		}
@@ -56,7 +61,7 @@ func TailTaskStatus(task proxmox.Task, interval time.Duration, ctx context.Conte
 
 // TaskStatus updates the task and returns a message explaining the task's
 // status
-func TaskStatus(task *proxmox.Task, ctx context.Context) (string, error) {
+func TaskStatus(ctx context.Context, task *proxmox.Task) (string, error) {
 	err := task.Ping(ctx)            // Update task.
 	msg := fmt.Sprintf("%#v", *task) // TODO: Improve task status formatting
 	if task.IsFailed {
@@ -79,13 +84,13 @@ if err != nil {
 	return err
 */
 func QuietWaitTask(task proxmox.Task, interval time.Duration, ctx context.Context) error {
-	taskStatus, err := TaskStatus(&task, ctx) // init vars, get initial task status
+	taskStatus, err := TaskStatus(ctx, &task) // init vars, get initial task status
 	if err != nil {
 		return err
 	}
 	logrus.Tracef("%#v\n", taskStatus)
 	for { // loop
-		taskStatus, err = TaskStatus(&task, ctx) // get new task status
+		taskStatus, err = TaskStatus(ctx, &task) // get new task status
 		if err != nil {
 			return err
 		}
@@ -94,17 +99,16 @@ func QuietWaitTask(task proxmox.Task, interval time.Duration, ctx context.Contex
 		} else { // task is not running
 			break // escape the loop
 		}
-
 	}
-	return fmt.Errorf("We shouldn't end up here...\n")
+	return err
 }
 
 func GetWaitCmd(task proxmox.Task) string {
 	return fmt.Sprintf(
 		`
 To watch the running operation, run:
-    gomox -w taskstatus "%s"
-`, task.UPID,
+    %s -w taskstatus "%s"
+`, os.Args[0], task.UPID,
 	)
 }
 
@@ -121,14 +125,10 @@ func WaitForCliTask(c *cli.Context, task proxmox.Task) error {
 			return err
 		}
 	} else {
-		err = TailTaskStatus(
-			task,
-			DefaultPollInterval,
-			c.Context,
-		)
+		err = TailTaskStatus(c.Context, task, DefaultPollInterval)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+	return err
 }

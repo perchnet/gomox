@@ -1,7 +1,6 @@
 package destroy
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/b-/gomox/util"
@@ -50,7 +49,7 @@ func destroyVmCmd(c *cli.Context) error {
 	)
 	vmid := c.Uint64("vmid")
 
-	vm, err := util.GetVirtualMachineByVMID(vmid, client, c.Context)
+	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {
 		// if we receive an error
 		msg := fmt.Sprintf(
@@ -67,7 +66,7 @@ func destroyVmCmd(c *cli.Context) error {
 		}
 	}
 	if vm.IsStopped() {
-		task, err := util.DestroyVm(vm, context.Background())
+		task, err := util.DestroyVm(c.Context, vm)
 		if err != nil {
 			return err
 		}
@@ -86,8 +85,8 @@ func destroyVmCmd(c *cli.Context) error {
 					"Requesting stop.", vmid, vm.Status,
 			)
 			task, err := util.RequestState(
+				c.Context,
 				util.StateRequestParams{RequestedState: util.StoppedState, Vm: vm},
-				context.Background(),
 			)
 			if err != nil {
 				return err

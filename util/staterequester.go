@@ -22,7 +22,7 @@ type StateRequestParams struct {
 }
 
 // RequestState requests Proxmox change the state of a virtual machine.
-func RequestState(params StateRequestParams, ctx context.Context) (*proxmox.Task, error) {
+func RequestState(ctx context.Context, params StateRequestParams) (*proxmox.Task, error) {
 
 	var task *proxmox.Task
 	var err error

@@ -1,8 +1,6 @@
 package pveVersion
 
 import (
-	"context"
-
 	"github.com/b-/gomox/util"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
@@ -26,7 +24,7 @@ func pveVersion(c *cli.Context) error {
 		},
 	)
 
-	version, err := client.Version(context.Background())
+	version, err := client.Version(c.Context)
 	if err != nil {
 		return err
 	}

@@ -116,22 +116,22 @@ func cloneVm(c *cli.Context) error {
 		},
 	)
 	vmid, newId := c.Uint64("vmid"), c.Uint64("newid")
-	vm, err := util.GetVirtualMachineByVMID(vmid, client, c.Context)
+	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {
 		return err
 	}
 
 	if newId != 0 { // if we're manually assigning the target VMID
 		vmWithSameId, _ := util.GetVirtualMachineByVMID(
+			c.Context,
 			newId,
 			client,
-			c.Context,
 		) // check if VM already exists with target VMID
 		if vmWithSameId != nil {
 			logrus.Infof("Virtual machine with target ID %d already exists.\n", newId)
 			switch c.Bool("overwrite") {
 			case true:
-				task, err := util.DestroyVm(vmWithSameId, c.Context)
+				task, err := util.DestroyVm(c.Context, vmWithSameId)
 				if err != nil {
 					return err
 				}

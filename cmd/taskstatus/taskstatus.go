@@ -10,8 +10,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const taskMsgFmt = "task: %#v\n"
-
 var Command = &cli.Command{
 	Name:   "taskstatus",
 	Usage:  "Get the status of a given task, by UPID",
@@ -52,17 +50,13 @@ func taskStatusCmd(c *cli.Context) error {
 	tailMode := c.Bool("wait")
 	task := proxmox.NewTask(proxmox.UPID(c.String("upid")), &client)
 
-	taskStatus, err := tasks.TaskStatus(task, c.Context)
+	taskStatus, err := tasks.TaskStatus(c.Context, task)
 	if err != nil {
 		return err
 	}
 	if task.IsRunning {
 		if tailMode {
-			err = tasks.TailTaskStatus(
-				*task,
-				time.Duration(c.Int("interval"))*time.Second,
-				c.Context,
-			)
+			err = tasks.TailTaskStatus(c.Context, *task, time.Duration(c.Int("interval"))*time.Second)
 			if err != nil {
 				return err
 			}

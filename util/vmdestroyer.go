@@ -9,12 +9,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func DestroyVm(vm *proxmox.VirtualMachine, ctx context.Context) (proxmox.Task, error) {
+func DestroyVm(ctx context.Context, vm *proxmox.VirtualMachine) (proxmox.Task, error) {
 	task, err := vm.Delete(ctx)
 	if err != nil {
 		return *task, err
 	}
-	err = task.Ping(context.Background())
+	err = task.Ping(ctx)
 	if err != nil {
 		return *task, err
 	}
@@ -22,7 +22,7 @@ func DestroyVm(vm *proxmox.VirtualMachine, ctx context.Context) (proxmox.Task, e
 	return *task, nil
 }
 
-func DestroyVmWithForce(vm *proxmox.VirtualMachine, ctx context.Context) (proxmox.Task, error) {
+func DestroyVmWithForce(ctx context.Context, vm *proxmox.VirtualMachine) (proxmox.Task, error) {
 	logrus.Trace(
 		"DestroyVmWithForce(\n",
 		fmt.Sprintf("    vm: %#v\n", vm), // todo: learn structured logging
@@ -46,7 +46,7 @@ func DestroyVmWithForce(vm *proxmox.VirtualMachine, ctx context.Context) (proxmo
 			return *task, err
 		}
 	}
-	task, err := DestroyVm(vm, ctx)
+	task, err := DestroyVm(ctx, vm)
 	if err != nil {
 		return task, err
 	}

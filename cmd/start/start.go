@@ -1,7 +1,6 @@
 package start
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/b-/gomox/util"
@@ -50,7 +49,7 @@ func startVm(c *cli.Context) error {
 
 	vmid := c.Uint64("vmid")
 
-	vm, err := util.GetVirtualMachineByVMID(vmid, client, c.Context)
+	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {
 		return err
 	}
@@ -66,8 +65,8 @@ func startVm(c *cli.Context) error {
 		}
 	}
 	task, err := util.RequestState(
+		c.Context,
 		util.StateRequestParams{RequestedState: requestedState, Vm: vm},
-		context.Background(),
 	)
 	if err != nil {
 		return err
