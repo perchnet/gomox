@@ -1,4 +1,4 @@
-package gomox
+package util
 
 import (
 	"github.com/luthermonson/go-proxmox"

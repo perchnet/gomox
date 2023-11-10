@@ -6,7 +6,7 @@ import (
 	"github.com/b-/gomox/cmd/pveVersion"
 	"github.com/b-/gomox/cmd/start"
 	"github.com/b-/gomox/cmd/stop"
-	"github.com/b-/gomox/cmd/taskStatus"
+	"github.com/b-/gomox/cmd/taskstatus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -17,6 +17,6 @@ func Commands() cli.Commands {
 		pveVersion.Command,
 		clone.Command,
 		destroy.Command,
-		taskStatus.Command,
+		taskstatus.Command,
 	}
 }

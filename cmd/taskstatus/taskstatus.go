@@ -1,8 +1,10 @@
-package taskStatus
+package taskstatus
 
 import (
 	"time"
 
+	"github.com/b-/gomox/tasks"
+	"github.com/b-/gomox/util"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -19,6 +21,7 @@ var Command = &cli.Command{
 			Name:     "upid",
 			Usage:    "Proxmox task ID (`UPID`) to get the status for.",
 			Required: true,
+			Aliases:  []string{"t"},
 		},
 		&cli.IntFlag{
 			Name:     "timeout",
@@ -38,8 +41,8 @@ var Command = &cli.Command{
 }
 
 func taskStatusCmd(c *cli.Context) error {
-	client := InstantiateClient(
-		GetPveUrl(c),
+	client := util.InstantiateClient(
+		util.GetPveUrl(c),
 		proxmox.Credentials{
 			Username: c.String("pveuser"),
 			Password: c.String("pvepassword"),
@@ -49,17 +52,20 @@ func taskStatusCmd(c *cli.Context) error {
 	tailMode := c.Bool("wait")
 	task := proxmox.NewTask(proxmox.UPID(c.String("upid")), &client)
 
-	taskStatus, err := TaskStatus(*task, c.Context)
+	taskStatus, err := tasks.TaskStatus(task, c.Context)
 	if err != nil {
 		return err
 	}
 	if task.IsRunning {
 		if tailMode {
-			TailTaskStatus(
-				task,
+			err = tasks.TailTaskStatus(
+				*task,
 				time.Duration(c.Int("interval"))*time.Second,
 				c.Context,
 			)
+			if err != nil {
+				return err
+			}
 		}
 	} else {
 		logrus.Info(taskStatus)

@@ -24,6 +24,8 @@ github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 h1:2VTzZjLZBgl62/EtslC
 github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542/go.mod h1:Ow0tF8D4Kplbc8s8sSb3V2oUCygFHVp8gC3Dn6U4MNI=
 github.com/jinzhu/copier v0.4.0 h1:w3ciUoD19shMCRargcpm0cm91ytaBhDvuRpz1ODO/U8=
 github.com/jinzhu/copier v0.4.0/go.mod h1:DfbEm0FYsaqBcKcFuvmOZb218JkPGtvSHsKg8S8hyyg=
+github.com/kisielk/godepgraph v0.0.0-20221115040737-2d0831789458 h1:QHffewzTTAhdV2FQ0X6hxp/tHpRYXE3STwzaD94N1qw=
+github.com/kisielk/godepgraph v0.0.0-20221115040737-2d0831789458/go.mod h1:Gb5YEgxqiSSVrXKWQxDcKoCM94NO5QAwOwTaVmIUAMI=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/luthermonson/go-proxmox v0.0.0-beta1 h1:6tzyKzhtIlmJJWzDVaFoMD4TkzDEM521Mrz4vT0vfC4=
 github.com/luthermonson/go-proxmox v0.0.0-beta1/go.mod h1:wkD6045y9lKBCP0sJGjNqmlBCo0vwRwnfhmsrPBTu34=
