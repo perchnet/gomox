@@ -3,60 +3,118 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
 )
 
 const (
 	DefaultPollInterval = time.Second * 5
-	// SpinnerCharSet       = 9 // Classic Unix spinner |/-\|
-	// SpinnerCharSet = 14 // Docker Compose-style Braille spinner
-	spinnerCharSet = 25 // Japanese spinner
+	// SpinnerCharSet       = 9 // Classic Unix quiet |/-\|
+	// SpinnerCharSet = 14 // Docker Compose-style Braille quiet
+	spinnerCharSet = 25 // Japanese quiet
 	// SpinnerCharSet = 28 // oOo
 	spinnerSpeed = 100 * time.Millisecond
 )
 
-// TailTaskStatus waits for a task to complete, displaying a spinner with status
-// messages as it progresses.
-// If `interval` is 0s, it will be set to DefaultPollInterval. TODO: implement options
-func TailTaskStatus(ctx context.Context, task proxmox.Task, interval time.Duration) error {
-	if interval == time.Duration(0) {
-		interval = DefaultPollInterval
+type spinnerConfig struct {
+	charSet int
+	speed   time.Duration
+}
+
+type SpinnerOption func(c *spinnerConfig)
+
+func WithSpinnerCharSet(charset int) SpinnerOption {
+	return func(c *spinnerConfig) { c.charSet = charset }
+}
+func WithSpinnerSpeed(speed time.Duration) SpinnerOption {
+	return func(c *spinnerConfig) { c.speed = speed }
+}
+
+// NewSpinner returns a *Spinner with the specified options
+func NewSpinner(opts ...SpinnerOption) *spinner.Spinner {
+	c := &spinnerConfig{
+		charSet: rand.Intn(90), // random spinner
+		speed:   100 * time.Millisecond,
 	}
-	s := spinner.New(spinner.CharSets[spinnerCharSet], spinnerSpeed) // Build our new spinner
-	s.Start()                                                        // Start the spinner
-	taskStatus, err := TaskStatus(ctx, &task)                        // init vars, get initial task status
-	lastTaskStatus := taskStatus
+	for _, opt := range opts {
+		opt(c)
+	}
+	return spinner.New(spinner.CharSets[c.charSet], c.speed)
+}
+
+type waitConfig struct {
+	quiet   bool
+	spinner spinnerConfig
+}
+
+type WaitOption func(c *waitConfig)
+
+func WithOutput(quiet bool, spinnerOpt ...SpinnerOption) WaitOption {
+	return func(c *waitConfig) { c.quiet = false }
+}
+
+func WithSpinner(opts ...SpinnerOption) WaitOption {
+	s := &spinnerConfig{
+		charSet: rand.Intn(90), // random spinner
+		speed:   100 * time.Millisecond,
+	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return func(c *waitConfig) {
+		c.quiet = false
+		c.spinner = *s
+	}
+}
+
+func WaitTask(ctx context.Context, task proxmox.Task, opts ...WaitOption) (err error) {
+	c := &waitConfig{
+		quiet: true, // default to quiet
+	}
+	for _, opt := range opts {
+		opt(c)
+	}
+	watch, err := task.Watch(ctx, 0)
 	if err != nil {
 		return err
 	}
-	logrus.Info(taskStatus, "\n")
-	s.Suffix = taskStatus // update spinner text
-	// every interval seconds
-	for { // loop
-		lastTaskStatus = taskStatus
-		taskStatus, err = TaskStatus(ctx, &task) // get new task status
-		if err != nil {
-			return err
+	s := spinner.New(spinner.CharSets[c.spinner.charSet], c.spinner.speed)
+	s.Start()
+	var newMsg string
+	for {
+		select {
+		case ln, ok := <-watch:
+			if !ok {
+				watch = nil
+				return err
+			}
+			newMsg = taskMsgPrefix(task, ln)
+			if s.Suffix != " "+newMsg {
+				switch c.quiet {
+				case true:
+					logrus.Trace(s.Suffix + "\n")
+				case false:
+					logrus.Info(s.Suffix + "\n")
+				}
+			}
+			s.Suffix = " " + // looks better with a space…
+				newMsg
 		}
-		if taskStatus != lastTaskStatus { // if taskStatus has changed, then
-			logrus.Info(taskStatus) // log new taskStatus
-			s.Suffix = taskStatus   // update spinner text
-		}
-		if task.IsRunning {
-			time.Sleep(interval)
-		} else { // task is not running
+		if watch == nil || !(task.IsRunning) {
 			s.Stop()
-			break // escape the loop
+			break
 		}
-
 	}
 	return nil
+}
+
+func taskMsgPrefix(task proxmox.Task, msg string) string {
+	return fmt.Sprintf("(%s) %s", task.Type, msg)
 }
 
 // TaskStatus updates the task and returns a message explaining the task's
@@ -70,39 +128,6 @@ func TaskStatus(ctx context.Context, task *proxmox.Task) (string, error) {
 	return msg, err
 }
 
-// QuietWaitTask silently waits for a task to complete,
-// without spawning a spinner.
-//
-// Usage example:
-/*
-err := tasks.QuietWaitTask(
-	task,
-	tasks.DefaultPollInterval,
-	c.Context,
-)
-if err != nil {
-	return err
-*/
-func QuietWaitTask(task proxmox.Task, interval time.Duration, ctx context.Context) error {
-	taskStatus, err := TaskStatus(ctx, &task) // init vars, get initial task status
-	if err != nil {
-		return err
-	}
-	logrus.Tracef("%#v\n", taskStatus)
-	for { // loop
-		taskStatus, err = TaskStatus(ctx, &task) // get new task status
-		if err != nil {
-			return err
-		}
-		if task.IsRunning {
-			time.Sleep(interval)
-		} else { // task is not running
-			break // escape the loop
-		}
-	}
-	return err
-}
-
 func GetWaitCmd(task proxmox.Task) string {
 	return fmt.Sprintf(
 		`
@@ -110,25 +135,4 @@ To watch the running operation, run:
     %s -w taskstatus "%s"
 `, os.Args[0], task.UPID,
 	)
-}
-
-// WaitForCliTask waits for `task` to complete
-func WaitForCliTask(c *cli.Context, task proxmox.Task) error {
-	var err error
-	if c.Bool("quiet") {
-		err = QuietWaitTask(
-			task,
-			DefaultPollInterval,
-			c.Context,
-		)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = TailTaskStatus(c.Context, task, DefaultPollInterval)
-		if err != nil {
-			return err
-		}
-	}
-	return err
 }

@@ -1,7 +1,7 @@
 package taskstatus
 
 import (
-	"time"
+	"math/rand"
 
 	"github.com/b-/gomox/tasks"
 	"github.com/b-/gomox/util"
@@ -56,14 +56,52 @@ func taskStatusCmd(c *cli.Context) error {
 	}
 	if task.IsRunning {
 		if tailMode {
-			err = tasks.TailTaskStatus(c.Context, *task, time.Duration(c.Int("interval"))*time.Second)
+			// err = tasks.TailTaskStatus(c.Context, *task, time.Duration(c.Int("interval"))*time.Second)
+			err = tasks.WaitTask(
+				c.Context,
+				*task,
+				tasks.WithOutput(false),
+				tasks.WithSpinner(
+					tasks.WithSpinnerCharSet(rand.Intn(90)),
+				),
+			)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		logrus.Info(taskStatus)
+		err = tasks.WaitTask(c.Context, *task, tasks.WithOutput(false))
 	}
 
 	return nil
+}
+
+// WaitForCliTask waits for `task` to complete
+func WaitForCliTask(c *cli.Context, task proxmox.Task) error {
+	var err error
+	if c.Bool("quiet") {
+		err = tasks.WaitTask(
+			c.Context,
+			task,
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = tasks.WaitTask(
+			c.Context,
+			task,
+			tasks.WithOutput(false),
+			tasks.WithSpinner(
+				tasks.WithSpinnerCharSet(
+					rand.Intn(90),
+				),
+			),
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return err
 }

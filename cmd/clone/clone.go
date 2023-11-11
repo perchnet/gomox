@@ -138,7 +138,7 @@ func cloneVm(c *cli.Context) error {
 				logrus.Info("Overwrite requested.")
 				logrus.Warnf("Destroying VM %#v.\n%#v\n", vmWithSameId, task)
 
-				err = tasks.WaitForCliTask(c, task)
+				err = tasks.WaitTask(c.Context, task)
 				if err != nil {
 					return err
 				}
@@ -167,7 +167,12 @@ func cloneVm(c *cli.Context) error {
 
 	logrus.Infof("clone requested! new id: %d.\n%#v\n", outVmid, task)
 	if c.Bool("wait") {
-		err = tasks.WaitForCliTask(c, *task)
+		err := tasks.WaitTask(
+			c.Context,
+			*task,
+			tasks.WithSpinner(),
+		)
+		// err = tasks.WaitForCliTask(c, *task)
 		if err != nil {
 			return err
 		}
