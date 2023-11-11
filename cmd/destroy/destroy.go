@@ -1,9 +1,9 @@
 package destroy
 
 import (
-	"context"
 	"fmt"
 
+	"github.com/b-/gomox/util"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -39,8 +39,8 @@ var Command = &cli.Command{
 }
 
 func destroyVmCmd(c *cli.Context) error {
-	client := InstantiateClient(
-		GetPveUrl(c),
+	client := util.InstantiateClient(
+		util.GetPveUrl(c),
 		proxmox.Credentials{
 			Username: c.String("pveuser"),
 			Password: c.String("pvepassword"),
@@ -49,7 +49,7 @@ func destroyVmCmd(c *cli.Context) error {
 	)
 	vmid := c.Uint64("vmid")
 
-	vm, err := GetVirtualMachineByVMID(vmid, client, c.Context)
+	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {
 		// if we receive an error
 		msg := fmt.Sprintf(
@@ -66,7 +66,7 @@ func destroyVmCmd(c *cli.Context) error {
 		}
 	}
 	if vm.IsStopped() {
-		task, err := DestroyVm(vm, context.Background())
+		task, err := util.DestroyVm(c.Context, vm)
 		if err != nil {
 			return err
 		}
@@ -84,7 +84,10 @@ func destroyVmCmd(c *cli.Context) error {
 				"VM %d is currently %s!\n"+
 					"Requesting stop.", vmid, vm.Status,
 			)
-			task, err := RequestState(StateRequestParams{RequestedState: StoppedState, Vm: vm}, context.Background())
+			task, err := util.RequestState(
+				c.Context,
+				util.StateRequestParams{RequestedState: util.StoppedState, Vm: vm},
+			)
 			if err != nil {
 				return err
 			} else {

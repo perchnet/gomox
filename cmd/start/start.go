@@ -1,9 +1,9 @@
 package start
 
 import (
-	"context"
 	"fmt"
 
+	"github.com/b-/gomox/util"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -36,10 +36,10 @@ var Command = &cli.Command{
 
 // Starts a Proxmox VM as specified by the `vmid` arg
 func startVm(c *cli.Context) error {
-	requestedState := RunningState
+	requestedState := util.RunningState
 
-	client := InstantiateClient(
-		GetPveUrl(c),
+	client := util.InstantiateClient(
+		util.GetPveUrl(c),
 		proxmox.Credentials{
 			Username: c.String("pveuser"),
 			Password: c.String("pvepassword"),
@@ -49,7 +49,7 @@ func startVm(c *cli.Context) error {
 
 	vmid := c.Uint64("vmid")
 
-	vm, err := GetVirtualMachineByVMID(vmid, client, c.Context)
+	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,10 @@ func startVm(c *cli.Context) error {
 			return fmt.Errorf(msg)
 		}
 	}
-	task, err := RequestState(StateRequestParams{RequestedState: requestedState, Vm: vm}, context.Background())
+	task, err := util.RequestState(
+		c.Context,
+		util.StateRequestParams{RequestedState: requestedState, Vm: vm},
+	)
 	if err != nil {
 		return err
 	}

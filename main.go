@@ -1,4 +1,4 @@
-package gomox
+package main
 
 import (
 	"io"

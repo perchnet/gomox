@@ -1,11 +1,10 @@
 package clone
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/b-/gomox"
 	"github.com/b-/gomox/tasks"
+	"github.com/b-/gomox/util"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -108,8 +107,8 @@ func cloneVm(c *cli.Context) error {
 		Target:   c.String("target"),
 	}
 
-	client := gomox.InstantiateClient(
-		gomox.GetPveUrl(c),
+	client := util.InstantiateClient(
+		util.GetPveUrl(c),
 		proxmox.Credentials{
 			Username: c.String("pveuser"),
 			Password: c.String("pvepassword"),
@@ -117,47 +116,31 @@ func cloneVm(c *cli.Context) error {
 		},
 	)
 	vmid, newId := c.Uint64("vmid"), c.Uint64("newid")
-	vm, err := gomox.GetVirtualMachineByVMID(vmid, client, c.Context)
+	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {
 		return err
 	}
 
 	if newId != 0 { // if we're manually assigning the target VMID
-		vmWithSameId, _ := gomox.GetVirtualMachineByVMID(
+		vmWithSameId, _ := util.GetVirtualMachineByVMID(
+			c.Context,
 			newId,
 			client,
-			c.Context,
 		) // check if VM already exists with target VMID
 		if vmWithSameId != nil {
 			logrus.Infof("Virtual machine with target ID %d already exists.\n", newId)
 			switch c.Bool("overwrite") {
 			case true:
-				logrus.Infof("Overwrite requested.\n")
-				task, err := gomox.DestroyVm(vmWithSameId, context.Background())
+				task, err := util.DestroyVm(c.Context, vmWithSameId)
 				if err != nil {
 					return err
 				}
 				logrus.Info("Overwrite requested.")
 				logrus.Warnf("Destroying VM %#v.\n%#v\n", vmWithSameId, task)
 
-				if c.Bool("quiet") {
-					err := tasks.QuietWaitTask(
-						task,
-						tasks.DefaultPollInterval,
-						c.Context,
-					)
-					if err != nil {
-						return err
-					}
-				} else {
-					err := tasks.TailTaskStatus(
-						task,
-						tasks.DefaultPollInterval,
-						c.Context,
-					)
-					if err != nil {
-						return err
-					}
+				err = tasks.WaitForCliTask(c, task)
+				if err != nil {
+					return err
 				}
 
 				logrus.Infof("task: %#v\n", task)
@@ -165,45 +148,31 @@ func cloneVm(c *cli.Context) error {
 				return fmt.Errorf(
 					"Virtual machine with target ID %d already exists.\n"+
 						"Use --overwrite if necessary.\n"+
-						"%#v",
-					newId, vmWithSameId,
+						"%#v\n", newId, vmWithSameId,
 				)
 			}
 
 		}
 	}
 
-	outVmid, task, err := vm.Clone(context.Background(), &cloneOptions)
+	outVmid, task, err := vm.Clone(c.Context, &cloneOptions) // do the clone
 	if err != nil {
 		return err
 	}
 
-	err = task.Ping(context.Background())
+	err = task.Ping(c.Context) // update task
 	if err != nil {
 		return err
 	}
 
 	logrus.Infof("clone requested! new id: %d.\n%#v\n", outVmid, task)
 	if c.Bool("wait") {
-		if c.Bool("quiet") {
-			err := tasks.QuietWaitTask(
-				task,
-				tasks.DefaultPollInterval,
-				c.Context,
-			)
-			if err != nil {
-				return err
-			}
-		} else {
-			err := tasks.TailTaskStatus(
-				task,
-				tasks.DefaultPollInterval,
-				c.Context,
-			)
-			if err != nil {
-				return err
-			}
+		err = tasks.WaitForCliTask(c, *task)
+		if err != nil {
+			return err
 		}
+	} else {
+		logrus.Info(tasks.GetWaitCmd(*task))
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-package gomox
+package util
 
 import (
 	"fmt"
@@ -14,8 +14,8 @@ or builds a URL from the `scheme`, `pvehost`, and `pveport` args.
 */
 func GetPveUrl(c *cli.Context) string {
 	var ret string
-	pveurl := c.String("pveurl")
-	switch pveurl {
+	pveUrl := c.String("pveurl")
+	switch pveUrl {
 	case "":
 		ret = fmt.Sprint(
 			c.String("scheme"),
@@ -26,7 +26,7 @@ func GetPveUrl(c *cli.Context) string {
 			ApiUrlSuffix,
 		)
 	default:
-		ret = pveurl
+		ret = pveUrl
 	}
 	return ret
 }

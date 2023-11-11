@@ -1,5 +1,8 @@
-vendor
 *.DS_Store
-.env
 *go.work
 *go.work.sum
+.env
+.idea
+.trunk
+.vscode
+vendor
