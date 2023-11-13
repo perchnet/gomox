@@ -13,15 +13,14 @@ import (
 )
 
 const (
-	DefaultPollInterval = time.Second * 5
-	// SpinnerCharSet       = 9 // Classic Unix quiet |/-\|
-	// SpinnerCharSet = 14 // Docker Compose-style Braille quiet
-	spinnerCharSet = 25 // Japanese quiet
-	// SpinnerCharSet = 28 // oOo
+	DefaultPollDuration   = time.Second * 5
+	DefaultSpinnerCharSet = 9 // Classic Unix quiet |/-\|
+	// DefaultSpinnerCharSet = 14 // Docker Compose-style Braille spinner
 	spinnerSpeed = 100 * time.Millisecond
 )
 
 type spinnerConfig struct {
+	enabled bool
 	charSet int
 	speed   time.Duration
 }
@@ -35,46 +34,53 @@ func WithSpinnerSpeed(speed time.Duration) SpinnerOption {
 	return func(c *spinnerConfig) { c.speed = speed }
 }
 
-// NewSpinner returns a *Spinner with the specified options
-func NewSpinner(opts ...SpinnerOption) *spinner.Spinner {
-	c := &spinnerConfig{
-		charSet: rand.Intn(90), // random spinner
-		speed:   100 * time.Millisecond,
-	}
-	for _, opt := range opts {
-		opt(c)
-	}
-	return spinner.New(spinner.CharSets[c.charSet], c.speed)
-}
-
 type waitConfig struct {
-	quiet   bool
-	spinner spinnerConfig
+	quiet         bool
+	timeout       time.Duration
+	enablePolling bool // whether to use a ticker to poll the task for completion as well
+	pollDuration  time.Duration
+	spinnerConfig spinnerConfig
 }
 
 type WaitOption func(c *waitConfig)
 
-func WithOutput(quiet bool, spinnerOpt ...SpinnerOption) WaitOption {
+func WithOutput() WaitOption {
 	return func(c *waitConfig) { c.quiet = false }
 }
 
 func WithSpinner(opts ...SpinnerOption) WaitOption {
 	s := &spinnerConfig{
-		charSet: rand.Intn(90), // random spinner
-		speed:   100 * time.Millisecond,
+		charSet: rand.Intn(90), // random spinnerConfig
+		speed:   spinnerSpeed,
+		enabled: true,
 	}
 	for _, opt := range opts {
 		opt(s)
 	}
 	return func(c *waitConfig) {
 		c.quiet = false
-		c.spinner = *s
+		c.spinnerConfig = *s
+	}
+}
+
+func WithPolling(pollDuration time.Duration, timeout time.Duration) WaitOption {
+	return func(c *waitConfig) {
+		c.enablePolling = true
+		c.pollDuration = pollDuration
+		c.timeout = timeout
 	}
 }
 
 func WaitTask(ctx context.Context, task proxmox.Task, opts ...WaitOption) (err error) {
 	c := &waitConfig{
-		quiet: true, // default to quiet
+		quiet:         true,  // default to quiet
+		timeout:       0,     // No timeout
+		enablePolling: false, // No polling
+		pollDuration:  DefaultPollDuration,
+		spinnerConfig: spinnerConfig{
+			enabled: false,
+			// charSet: DefaultSpinnerCharSet,
+		},
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -83,8 +89,22 @@ func WaitTask(ctx context.Context, task proxmox.Task, opts ...WaitOption) (err e
 	if err != nil {
 		return err
 	}
-	s := spinner.New(spinner.CharSets[c.spinner.charSet], c.spinner.speed)
+
+	// set up the spinner
+	s := spinner.New(spinner.CharSets[c.spinnerConfig.charSet], c.spinnerConfig.speed)
+	if c.spinnerConfig.enabled {
+		s.Enable()
+	} else {
+		s.Disable()
+	}
 	s.Start()
+	defer s.Stop()
+
+	// set up the task poller
+	if c.enablePolling {
+		TaskPoller(ctx, c.pollDuration, c.timeout, task, watch, false)
+	}
+
 	var newMsg string
 	for {
 		select {
@@ -106,11 +126,50 @@ func WaitTask(ctx context.Context, task proxmox.Task, opts ...WaitOption) (err e
 				newMsg
 		}
 		if watch == nil || !(task.IsRunning) {
-			s.Stop()
 			break
 		}
 	}
 	return nil
+}
+
+func TaskPoller(
+	ctx context.Context,
+	pollDuration time.Duration,
+	timeout time.Duration,
+	task proxmox.Task,
+	watchChannel chan string,
+	stopTask bool,
+) {
+	ticker := time.NewTicker(pollDuration)
+	defer ticker.Stop()
+	timeoutExpired := make(chan bool)
+	if timeout > 0 { // timeout == 0 means never timeout
+		go func() {
+			time.Sleep(timeout)
+			timeoutExpired <- true
+			if stopTask {
+				err := task.Stop(ctx)
+				if err != nil {
+					return
+				}
+			}
+		}()
+	}
+	for {
+		select {
+		case <-timeoutExpired:
+			watchChannel <- fmt.Sprintln("Timed out!")
+
+			close(watchChannel)
+			return
+		case <-ticker.C:
+			polledStatus, _ := TaskStatus(ctx, &task)
+			if task.IsRunning {
+				logrus.Debugln(polledStatus)
+			}
+			return
+		}
+	}
 }
 
 func taskMsgPrefix(task proxmox.Task, msg string) string {

@@ -25,8 +25,8 @@ var Command = &cli.Command{
 			Name:     "timeout",
 			Category: "wait",
 			Usage:    "Wait up to `TIMEOUT` seconds for task completion",
-			Value:    30,
-			Aliases:  []string{"s"},
+			// Value:    30,
+			Aliases: []string{"s"},
 		},
 		&cli.IntFlag{
 			Name:     "interval",
@@ -54,24 +54,12 @@ func taskStatusCmd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if task.IsRunning {
-		if tailMode {
-			// err = tasks.TailTaskStatus(c.Context, *task, time.Duration(c.Int("interval"))*time.Second)
-			err = tasks.WaitTask(
-				c.Context,
-				*task,
-				tasks.WithOutput(false),
-				tasks.WithSpinner(
-					tasks.WithSpinnerCharSet(rand.Intn(90)),
-				),
-			)
-			if err != nil {
-				return err
-			}
+	logrus.Info(taskStatus)
+	if task.IsRunning && tailMode {
+		err = WaitForCliTask(c, *task)
+		if err != nil {
+			return err
 		}
-	} else {
-		logrus.Info(taskStatus)
-		err = tasks.WaitTask(c.Context, *task, tasks.WithOutput(false))
 	}
 
 	return nil
@@ -92,7 +80,8 @@ func WaitForCliTask(c *cli.Context, task proxmox.Task) error {
 		err = tasks.WaitTask(
 			c.Context,
 			task,
-			tasks.WithOutput(false),
+			tasks.WithOutput(),
+			tasks.WithPolling(tasks.DefaultPollDuration, 0),
 			tasks.WithSpinner(
 				tasks.WithSpinnerCharSet(
 					rand.Intn(90),
@@ -103,5 +92,5 @@ func WaitForCliTask(c *cli.Context, task proxmox.Task) error {
 			return err
 		}
 	}
-	return err
+	return nil
 }

@@ -3,6 +3,7 @@ package clone
 import (
 	"fmt"
 
+	"github.com/b-/gomox/cmd/taskstatus"
 	"github.com/b-/gomox/tasks"
 	"github.com/b-/gomox/util"
 	"github.com/luthermonson/go-proxmox"
@@ -138,7 +139,8 @@ func cloneVm(c *cli.Context) error {
 				logrus.Info("Overwrite requested.")
 				logrus.Warnf("Destroying VM %#v.\n%#v\n", vmWithSameId, task)
 
-				err = tasks.WaitTask(c.Context, task)
+				// err = tasks.WaitTask(c.Context, task, tasks.WithSpinner())
+				err = taskstatus.WaitForCliTask(c, task)
 				if err != nil {
 					return err
 				}
@@ -146,9 +148,8 @@ func cloneVm(c *cli.Context) error {
 				logrus.Infof("task: %#v\n", task)
 			case false:
 				return fmt.Errorf(
-					"Virtual machine with target ID %d already exists.\n"+
-						"Use --overwrite if necessary.\n"+
-						"%#v\n", newId, vmWithSameId,
+					"Use --overwrite if necessary.\n"+
+						"%#v\n", vmWithSameId,
 				)
 			}
 
