@@ -1,8 +1,6 @@
 package taskstatus
 
 import (
-	"math/rand"
-
 	"github.com/b-/gomox/tasks"
 	"github.com/b-/gomox/util"
 	"github.com/luthermonson/go-proxmox"
@@ -50,13 +48,13 @@ func taskStatusCmd(c *cli.Context) error {
 	tailMode := c.Bool("wait")
 	task := proxmox.NewTask(proxmox.UPID(c.String("upid")), &client)
 
-	taskStatus, err := tasks.TaskStatus(c.Context, task)
+	taskStatus, err := tasks.TaskStatus(c.Context, *task)
 	if err != nil {
 		return err
 	}
 	logrus.Info(taskStatus)
 	if task.IsRunning && tailMode {
-		err = WaitForCliTask(c, *task)
+		err = WaitForCliTask(c, task)
 		if err != nil {
 			return err
 		}
@@ -66,7 +64,7 @@ func taskStatusCmd(c *cli.Context) error {
 }
 
 // WaitForCliTask waits for `task` to complete
-func WaitForCliTask(c *cli.Context, task proxmox.Task) error {
+func WaitForCliTask(c *cli.Context, task *proxmox.Task) error {
 	var err error
 	if c.Bool("quiet") {
 		err = tasks.WaitTask(
@@ -81,12 +79,8 @@ func WaitForCliTask(c *cli.Context, task proxmox.Task) error {
 			c.Context,
 			task,
 			tasks.WithOutput(),
-			tasks.WithPolling(tasks.DefaultPollDuration, 0),
-			tasks.WithSpinner(
-				tasks.WithSpinnerCharSet(
-					rand.Intn(90),
-				),
-			),
+			tasks.WithPolling(),
+			tasks.WithSpinner(),
 		)
 		if err != nil {
 			return err

@@ -140,7 +140,7 @@ func cloneVm(c *cli.Context) error {
 				logrus.Warnf("Destroying VM %#v.\n%#v\n", vmWithSameId, task)
 
 				// err = tasks.WaitTask(c.Context, task, tasks.WithSpinner())
-				err = taskstatus.WaitForCliTask(c, task)
+				err = taskstatus.WaitForCliTask(c, &task)
 				if err != nil {
 					return err
 				}
@@ -156,7 +156,7 @@ func cloneVm(c *cli.Context) error {
 		}
 	}
 
-	outVmid, task, err := vm.Clone(c.Context, &cloneOptions) // do the clone
+	newVmid, task, err := vm.Clone(c.Context, &cloneOptions) // do the clone
 	if err != nil {
 		return err
 	}
@@ -165,12 +165,15 @@ func cloneVm(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	if newVmid == 0 {
+		newVmid = cloneOptions.NewID
+	}
 
-	logrus.Infof("clone requested! new id: %d.\n%#v\n", outVmid, task)
+	logrus.Infof("clone requested! new id: %d.\n%#v\n", newVmid, task)
 	if c.Bool("wait") {
 		err := tasks.WaitTask(
 			c.Context,
-			*task,
+			task,
 			tasks.WithSpinner(),
 		)
 		// err = tasks.WaitForCliTask(c, *task)
