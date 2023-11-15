@@ -14,7 +14,7 @@ import (
 //goland:noinspection SpellCheckingInspection
 var Command = &cli.Command{
 	Name:   "clone",
-	Usage:  "Clone a virtual machine",
+	Usage:  "Clone a virtual machine.",
 	Action: cloneVm,
 	Flags: []cli.Flag{
 		&cli.Uint64Flag{
@@ -44,46 +44,57 @@ var Command = &cli.Command{
 				return nil
 			},
 		},
+
 		&cli.Uint64Flag{
 			Name:        "bwlimit",
 			Usage:       "Override I/O bandwidth limit (in KiB/s).",
 			DefaultText: "unlimited",
+			Category:    "Cloned VM Options:",
 		},
 		&cli.StringFlag{
-			Name:  "description",
-			Usage: "Description for the new VM.",
+			Name:     "description",
+			Usage:    "Description for the new VM.",
+			Category: "Cloned VM Options:",
 		},
 		&cli.StringFlag{
-			Name:  "format",
-			Usage: "Target format for file storage. Only valid for full clone. Can be raw, qcow, or vmdk.",
+			Name:     "format",
+			Usage:    "Target format for file storage. Only valid for full clone. Can be raw, qcow, or vmdk.",
+			Category: "Cloned VM Options:",
 		},
 		&cli.BoolFlag{
-			Name:  "full",
-			Usage: "Create a full copy of all disks. This is always done when you clone a normal VM. For VM templates, we try to create a linked clone by default.",
+			Name:     "full",
+			Usage:    "Create a full copy of all disks. This is always done when you clone a normal VM. For VM templates, we try to create a linked clone by default.",
+			Category: "Cloned VM Options:",
 		},
 		&cli.StringFlag{
-			Name:  "name",
-			Usage: "Set a name for the new VM.",
+			Name:     "name",
+			Usage:    "Set a name for the new VM.",
+			Category: "Cloned VM Options:",
 		},
 		&cli.StringFlag{
-			Name:  "pool",
-			Usage: "Add the new VM to the specified pool.",
+			Name:     "pool",
+			Usage:    "Add the new VM to the specified pool.",
+			Category: "Cloned VM Options:",
 		},
 		&cli.StringFlag{
-			Name:  "snapname",
-			Usage: "The name of the snapshot.",
+			Name:     "snapname",
+			Usage:    "The name of the snapshot.",
+			Category: "Cloned VM Options:",
 		},
 		&cli.StringFlag{
-			Name:  "storage",
-			Usage: "Target storage for full clone.",
+			Name:     "storage",
+			Usage:    "Target storage for full clone.",
+			Category: "Cloned VM Options:",
 		},
 		&cli.StringFlag{
-			Name:  "target",
-			Usage: "Target node. Only allowed if the original VM is on shared storage.",
+			Name:     "target",
+			Usage:    "Target node. Only allowed if the original VM is on shared storage.",
+			Category: "Cloned VM Options:",
 		},
 		&cli.BoolFlag{
-			Name:  "overwrite",
-			Usage: "Overwrite the target VMID if it already exists. (Note: only relevant when manually specifying VMID.)",
+			Name:     "overwrite",
+			Usage:    "Overwrite the target VMID if it already exists. (Note: only relevant when manually specifying VMID.)",
+			Category: "Cloned VM Options:",
 		},
 	},
 }
@@ -171,12 +182,7 @@ func cloneVm(c *cli.Context) error {
 
 	logrus.Infof("clone requested! new id: %d.\n%#v\n", newVmid, task)
 	if c.Bool("wait") {
-		err := tasks.WaitTask(
-			c.Context,
-			task,
-			tasks.WithSpinner(),
-		)
-		// err = tasks.WaitForCliTask(c, *task)
+		err = taskstatus.WaitForCliTask(c, task)
 		if err != nil {
 			return err
 		}
