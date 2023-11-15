@@ -8,9 +8,8 @@ import (
 )
 
 var Command = &cli.Command{
-	Name: "pveversion",
-	Usage: "pveversion\n" +
-		"Gets the version of Proxmox VE running on the API server",
+	Name:   "pveversion",
+	Usage:  "Gets the version of Proxmox VE running on the API server",
 	Action: pveVersion,
 	Flags:  []cli.Flag{},
 }
