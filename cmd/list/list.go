@@ -20,7 +20,24 @@ var Command = &cli.Command{
 	Name:   "list",
 	Usage:  "Lists virtual machines",
 	Action: list,
-	Flags:  []cli.Flag{},
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:     "type",
+			Category: "",
+			// DefaultText: "both",
+			FilePath:    "",
+			Usage:       "`qemu|lxc|both`",
+			Required:    false,
+			Hidden:      false,
+			HasBeenSet:  false,
+			Value:       "both",
+			Destination: nil,
+			Aliases:     nil,
+			EnvVars:     nil,
+			TakesFile:   false,
+			Action:      nil,
+		},
+	},
 }
 
 func list(c *cli.Context) error {
@@ -39,11 +56,12 @@ func list(c *cli.Context) error {
 	// simple table with zero customizations
 	tw := table.NewWriter()
 	// append a header row
-	tw.AppendHeader(table.Row{"VMID", "Name", "Status", "Mem (MB)", "BootDisk (GB)", "PID"})
+	tw.AppendHeader(table.Row{"VMID", "Name", "Type", "Status", "Mem (MB)", "BootDisk (GB)", "PID"})
 	// append some data rows
 
 	for _, vm := range rsList {
 		// if vm.
+
 		tw.AppendRow(
 			table.Row{
 				// vmid,name,status,mem,boot,pid

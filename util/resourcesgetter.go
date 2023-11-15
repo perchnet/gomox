@@ -7,7 +7,7 @@ import (
 	"github.com/luthermonson/go-proxmox"
 )
 
-const (
+const ( // resource getter filters
 	VmFilter      = "vm"
 	StorageFilter = "storage"
 	NodeFilter    = "node"
@@ -15,7 +15,7 @@ const (
 )
 
 //goland:noinspection GoDeprecation
-const (
+const ( // returned resource types to further filter
 	NodeResource    = "node"
 	StorageResource = "storage"
 	PoolResource    = "pool"
@@ -61,16 +61,78 @@ func GetVirtualMachineByVMID(ctx context.Context, vmid uint64, client proxmox.Cl
 	return vm, err
 }
 
-func GetResourceList(ctx context.Context, client proxmox.Client, filter string) (
+// getResourceListConfig defines the options for
+type getResourceListConfig struct {
+	filter        string
+	furtherFilter []string
+}
+
+// GetResourceListOption specifies the type of Resources for GetResource to get.
+type GetResourceListOption func(c *getResourceListConfig)
+
+// WithVm makes GetResourceList return VMs.
+func WithVm() GetResourceListOption {
+	return func(c *getResourceListConfig) { c.filter = VmFilter }
+}
+
+// WithStorage makes GetResourceList return Storages.
+func WithStorage() GetResourceListOption {
+	return func(c *getResourceListConfig) { c.filter = StorageFilter }
+}
+
+// WithNode makes GetResourceList return Nodes.
+func WithNode() GetResourceListOption {
+	return func(c *getResourceListConfig) { c.filter = NodeFilter }
+}
+
+// WithSdn makes GetResourceList return SDNs.
+func WithSdn() GetResourceListOption {
+	return func(c *getResourceListConfig) { c.filter = SdnFilter }
+}
+
+// WithAll makes GetResourceList return VMs, Storage, Nodes, and SDNs.
+func WithAll() GetResourceListOption {
+	return func(c *getResourceListConfig) {
+		c.filter = ""
+	}
+}
+
+// WithQemu further filters GetResourceList for Qemu VMs.
+func WithQemu() GetResourceListOption {
+	return func(c *getResourceListConfig) { c.furtherFilter = append(c.furtherFilter, QemuResource) }
+}
+
+// WithLxc further filters GetResourceList for Qemu VMs.
+func WithLxc() GetResourceListOption {
+	return func(c *getResourceListConfig) { c.furtherFilter = append(c.furtherFilter, LxcResource) }
+}
+
+// WithPool further filters GetResourceList for Pools.
+func WithPool() GetResourceListOption {
+	return func(c *getResourceListConfig) { c.furtherFilter = append(c.furtherFilter, PoolResource) }
+}
+
+func GetResourceList(
+	ctx context.Context,
+	client proxmox.Client,
+	opts ...GetResourceListOption,
+) (
 	rsList []*proxmox.ClusterResource,
 	err error,
 ) {
+	c := &getResourceListConfig{
+		filter:        "",
+		furtherFilter: nil,
+	}
+	for _, opt := range opts {
+		opt(c)
+	}
 	cluster, err := client.Cluster(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	resources, err := cluster.Resources(ctx, filter)
+	resources, err := cluster.Resources(ctx, c.filter)
 	if err != nil {
 		return nil, err
 	}
