@@ -3,6 +3,7 @@ package clone
 import (
 	"fmt"
 
+	"github.com/b-/gomox/cmd/taskstatus"
 	"github.com/b-/gomox/tasks"
 	"github.com/b-/gomox/util"
 	"github.com/luthermonson/go-proxmox"
@@ -138,7 +139,8 @@ func cloneVm(c *cli.Context) error {
 				logrus.Info("Overwrite requested.")
 				logrus.Warnf("Destroying VM %#v.\n%#v\n", vmWithSameId, task)
 
-				err = tasks.WaitForCliTask(c, task)
+				// err = tasks.WaitTask(c.Context, task, tasks.WithSpinner())
+				err = taskstatus.WaitForCliTask(c, &task)
 				if err != nil {
 					return err
 				}
@@ -146,16 +148,15 @@ func cloneVm(c *cli.Context) error {
 				logrus.Infof("task: %#v\n", task)
 			case false:
 				return fmt.Errorf(
-					"Virtual machine with target ID %d already exists.\n"+
-						"Use --overwrite if necessary.\n"+
-						"%#v\n", newId, vmWithSameId,
+					"Use --overwrite if necessary.\n"+
+						"%#v\n", vmWithSameId,
 				)
 			}
 
 		}
 	}
 
-	outVmid, task, err := vm.Clone(c.Context, &cloneOptions) // do the clone
+	newVmid, task, err := vm.Clone(c.Context, &cloneOptions) // do the clone
 	if err != nil {
 		return err
 	}
@@ -164,10 +165,18 @@ func cloneVm(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	if newVmid == 0 {
+		newVmid = cloneOptions.NewID
+	}
 
-	logrus.Infof("clone requested! new id: %d.\n%#v\n", outVmid, task)
+	logrus.Infof("clone requested! new id: %d.\n%#v\n", newVmid, task)
 	if c.Bool("wait") {
-		err = tasks.WaitForCliTask(c, *task)
+		err := tasks.WaitTask(
+			c.Context,
+			task,
+			tasks.WithSpinner(),
+		)
+		// err = tasks.WaitForCliTask(c, *task)
 		if err != nil {
 			return err
 		}

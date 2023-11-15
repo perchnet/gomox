@@ -37,10 +37,9 @@ func DestroyVmWithForce(ctx context.Context, vm *proxmox.VirtualMachine) (proxmo
 		if err != nil {
 			return *task, err
 		}
-		err = tasks.QuietWaitTask(
-			*task,
-			tasks.DefaultPollInterval,
+		err = tasks.WaitTask(
 			ctx,
+			task,
 		)
 		if err != nil {
 			return *task, err

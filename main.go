@@ -88,7 +88,7 @@ func main() {
 		},
 		Before: func(ctx *cli.Context) error {
 			if ctx.Bool("debug") {
-				logrus.SetLevel(logrus.DebugLevel)
+				logrus.SetLevel(logrus.TraceLevel)
 			} else {
 				// treat logrus like fmt.Print
 				logrus.SetFormatter(
