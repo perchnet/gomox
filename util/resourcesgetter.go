@@ -25,6 +25,15 @@ const ( // returned resource types to further filter
 	SdnResource     = "sdn"
 )
 
+type ResourceList struct {
+	NodeResources    []*proxmox.Node
+	StorageResources []*proxmox.Storage
+	PoolResources    []*proxmox.Pool
+	QemuResources    []*proxmox.VirtualMachine
+	LxcResources     []*proxmox.Container
+	OpenVzResources  []*proxmox.Container
+}
+
 func GetVirtualMachineByVMID(ctx context.Context, vmid uint64, client proxmox.Client) (
 	vm *proxmox.VirtualMachine,
 	err error,
@@ -146,21 +155,32 @@ func GetResourceList(
 	return rsList, nil
 }
 
-func GetVirtualMachineList(ctx context.Context, client proxmox.Client) (vmList []*proxmox.VirtualMachine, err error) {
+func GetVirtualMachineList(
+	ctx context.Context,
+	client proxmox.Client,
+	furtherFilterList ...string,
+) (vmList []proxmox.VirtualMachine, err error) {
 	var node *proxmox.Node
 	var vm *proxmox.VirtualMachine
 
-	resources, err := GetResourceList(ctx, client, VmFilter)
-	var rsList []*proxmox.ClusterResource
+	resources, err := GetResourceList(ctx, client, WithVm())
 	for _, rs := range resources {
-		node, err = client.Node(ctx, rs.Node)
-		if err != nil {
-			return nil, err
-		}
-		vm, err = node.VirtualMachine(ctx, int(rs.VMID))
-		rsList = append(rsList, rs)
-		if rs.Type == "qemu" {
-			vmList = append(vmList, vm)
+		if furtherFilterList != nil {
+			for _, furtherFilter := range furtherFilterList {
+				if rs.Type == furtherFilter {
+					node, err = client.Node(ctx, rs.Node)
+					if err != nil {
+						return nil, err
+					}
+					vm, err = node.VirtualMachine(ctx, int(rs.VMID))
+					if err != nil {
+						return nil, err
+					}
+					vmList = append(vmList, *vm)
+				}
+			}
+		} else {
+			vmList = append(vmList, *vm)
 		}
 	}
 

@@ -49,7 +49,7 @@ func list(c *cli.Context) error {
 			Realm:    c.String("pverealm"),
 		},
 	)
-	rsList, err := util.GetVirtualMachineList(c.Context, client)
+	rsList, err := util.GetVirtualMachineList(c.Context, client, util.QemuResource)
 	if err != nil {
 		return err
 	}
@@ -68,10 +68,12 @@ func list(c *cli.Context) error {
 				// https://git.proxmox.com/?p=qemu-server.git;a=blob;f=PVE/CLI/qm.pm;h=b17b4fe25d5bd21e9fe188e82998972b1dc29c36;hb=HEAD#l1001
 				int(vm.VMID), vm.Name, vm.Status, vm.MaxMem / Megabyte,
 				float64(vm.MaxDisk) / float64(Gigabyte),
-				// uint64(vm.PID),
+				uint64(vm.PID),
 			},
 		)
 	}
-	fmt.Print(tw.Render())
+	tw.Style().Options = table.OptionsNoBordersAndSeparators
+
+	fmt.Println(tw.Render())
 	return nil
 }

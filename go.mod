@@ -6,7 +6,7 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/jedib0t/go-pretty/v6 v6.4.9
 	github.com/kr/pretty v0.3.1
-	github.com/luthermonson/go-proxmox v0.0.0-beta1
+	github.com/luthermonson/go-proxmox v0.0.0-beta2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
 	github.com/urfave/cli/v2 v2.25.7
