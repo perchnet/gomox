@@ -168,6 +168,12 @@ func tasktail(ctx context.Context, start int, watch chan string, task *proxmox.T
 }
 
 func WaitTask(ctx context.Context, task *proxmox.Task, opts ...WaitOption) (err error) {
+	taskhead, err := task.Log(ctx, 0, 1)
+	if err != nil {
+		return err
+	}
+	taskname := taskhead[0]
+	fmt.Println(taskname)
 	c := &waitConfig{
 		quiet: true, // default to quiet
 		spinnerConfig: spinnerConfig{
