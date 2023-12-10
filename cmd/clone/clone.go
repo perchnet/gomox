@@ -18,31 +18,11 @@ var Command = &cli.Command{
 	Action: cloneVm,
 	Flags: []cli.Flag{
 		&cli.Uint64Flag{
-			Name:     "vmid",
-			Usage:    "`VMID` to clone from",
-			Required: true,
-			Aliases:  []string{"v"},
-			Action: func(c *cli.Context, vmid uint64) error {
-				if vmid < 100 || vmid > 999999999 {
-					return fmt.Errorf("vmid %d out of range", vmid)
-				}
-				return nil
-			},
-		},
-		&cli.Uint64Flag{
 			Name:        "newid",
 			Usage:       "`VMID` for the clone",
 			Required:    false,
 			Aliases:     []string{"n"},
 			DefaultText: "next available",
-			Action: func(c *cli.Context, vmid uint64) error {
-				if vmid < 100 || vmid > 999999999 {
-					if vmid != 0 {
-						return fmt.Errorf("vmid %d out of range", vmid)
-					}
-				}
-				return nil
-			},
 		},
 
 		&cli.Uint64Flag{
@@ -108,16 +88,7 @@ func bool2uint8(b bool) uint8 {
 
 // Clones a Proxmox VM as specified by the `from` arg and `params` struct
 func cloneVm(c *cli.Context) error {
-	cloneOptions := proxmox.VirtualMachineCloneOptions{
-		NewID:    int(c.Uint64("newid")),
-		BWLimit:  c.Uint64("bwlimit"),
-		Full:     bool2uint8(c.Bool("full")),
-		Name:     c.String("name"),
-		Pool:     c.String("pool"),
-		SnapName: c.String("snapname"),
-		Storage:  c.String("storage"),
-		Target:   c.String("target"),
-	}
+	newId := c.Uint64("newid")
 
 	client := util.InstantiateClient(
 		util.GetPveUrl(c),
@@ -127,10 +98,28 @@ func cloneVm(c *cli.Context) error {
 			Realm:    c.String("pverealm"),
 		},
 	)
-	vmid, newId := c.Uint64("vmid"), c.Uint64("newid")
+
+	vmid, err := util.GetVmidArg(c.Args().Slice())
+
 	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {
 		return err
+	}
+	if newId == 0 { // if newId isn't set
+		newIdT, err := util.GetVmidArg(c.Args().Tail())
+		if err == nil {
+			newId = uint64(newIdT)
+		}
+	}
+	cloneOptions := proxmox.VirtualMachineCloneOptions{
+		NewID:    int(newId),
+		BWLimit:  c.Uint64("bwlimit"),
+		Full:     bool2uint8(c.Bool("full")),
+		Name:     c.String("name"),
+		Pool:     c.String("pool"),
+		SnapName: c.String("snapname"),
+		Storage:  c.String("storage"),
+		Target:   c.String("target"),
 	}
 
 	if newId != 0 { // if we're manually assigning the target VMID
@@ -147,8 +136,9 @@ func cloneVm(c *cli.Context) error {
 				if err != nil {
 					return err
 				}
-				logrus.Info("Overwrite requested.")
-				logrus.Warnf("Destroying VM %#v.\n%#v\n", vmWithSameId, task)
+				logrus.Info("overwrite requested\n")
+				logrus.Warnf("destroying VM %d (%s)...\n", vmWithSameId.VMID, vmWithSameId.Name)
+				logrus.Debugf("task: %s\n", task.UPID)
 
 				// err = tasks.WaitTask(c.Context, task, tasks.WithSpinner())
 				err = taskstatus.WaitForCliTask(c, &task)
@@ -156,11 +146,11 @@ func cloneVm(c *cli.Context) error {
 					return err
 				}
 
-				logrus.Infof("task: %#v\n", task)
+				logrus.Debugf("task: %s\n", task.UPID)
 			case false:
+				logrus.Tracef("%#v\n", vmWithSameId)
 				return fmt.Errorf(
-					"Use --overwrite if necessary.\n"+
-						"%#v\n", vmWithSameId,
+					"Use --overwrite if necessary.\n",
 				)
 			}
 
@@ -180,7 +170,8 @@ func cloneVm(c *cli.Context) error {
 		newVmid = cloneOptions.NewID
 	}
 
-	logrus.Infof("clone requested! new id: %d.\n%#v\n", newVmid, task)
+	logrus.Infof("clone requested! new id: %d.\n", newVmid)
+	logrus.Tracef("%#v\n", task)
 	if c.Bool("wait") {
 		err = taskstatus.WaitForCliTask(c, task)
 		if err != nil {

@@ -10,22 +10,11 @@ import (
 )
 
 var Command = &cli.Command{
-	Name:   "start",
-	Usage:  "start a virtual machine",
-	Action: startVm,
+	Name:      "start",
+	Usage:     "start a virtual machine",
+	UsageText: "gomox start <VMID>",
+	Action:    startVm,
 	Flags: []cli.Flag{
-		&cli.Uint64Flag{
-			Name:     "vmid",
-			Usage:    "`VMID` to start",
-			Required: true,
-			Aliases:  []string{"v"},
-			Action: func(c *cli.Context, vmid uint64) error {
-				if vmid < 100 || vmid > 999999999 {
-					return fmt.Errorf("VM vmid %d out of range", vmid)
-				}
-				return nil
-			},
-		},
 		&cli.BoolFlag{
 			Name:  "idempotent",
 			Usage: "Don't return error if VM is already in requested state",
@@ -47,7 +36,10 @@ func startVm(c *cli.Context) error {
 		},
 	)
 
-	vmid := c.Uint64("vmid")
+	vmid, err := util.GetVmidArg(c.Args().Slice())
+	if err != nil {
+		return err
+	}
 
 	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {

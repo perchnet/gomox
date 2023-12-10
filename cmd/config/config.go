@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/b-/gomox/util"
@@ -29,7 +28,8 @@ func pveVersion(c *cli.Context) error {
 			Realm:    c.String("pverealm"),
 		},
 	)
-	vmid, err := strconv.Atoi(c.Args().First())
+
+	vmid, err := util.GetVmidArg(c.Args().Slice())
 	if err != nil {
 		return err
 	}

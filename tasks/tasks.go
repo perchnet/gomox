@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	NoContent             = "no content" // filter this out from logs
 	DefaultTimeout        = 60 * time.Second
 	DefaultPollDuration   = time.Millisecond * 500
 	DefaultSpinnerCharSet = 9 // Classic Unix quiet |/-\|
@@ -173,7 +174,9 @@ func WaitTask(ctx context.Context, task *proxmox.Task, opts ...WaitOption) (err 
 		return err
 	}
 	taskname := taskhead[0]
-	fmt.Println(taskname)
+	if taskname != NoContent {
+		fmt.Println(taskname)
+	}
 	c := &waitConfig{
 		quiet: true, // default to quiet
 		spinnerConfig: spinnerConfig{
