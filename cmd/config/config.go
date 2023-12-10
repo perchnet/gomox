@@ -3,13 +3,13 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/b-/gomox/util"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/luthermonson/go-proxmox"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -34,7 +34,7 @@ func pveVersion(c *cli.Context) error {
 		return err
 	}
 
-	vm, err := util.GetVirtualMachineByVMID(c.Context, client, uint64(vmid))
+	vm, err := util.GetVirtualMachineByVMID(c.Context, uint64(vmid), client)
 	if err != nil {
 		return err
 	}
@@ -44,8 +44,8 @@ func pveVersion(c *cli.Context) error {
 	// append a header row
 	tw.AppendHeader(table.Row{fmt.Sprintf("vm: %d", vmid), fmt.Sprintf("node: %s", vm.Node)})
 	// append some data rows.
-	config := *vm.VirtualMachineConfig
-	v := reflect.ValueOf(config)
+	// config := *vm.VirtualMachineConfig
+	/*v := reflect.ValueOf(config)
 	typeOfS := v.Type()
 
 	for i := 0; i < v.NumField(); i++ {
@@ -65,6 +65,8 @@ func pveVersion(c *cli.Context) error {
 			// fmt.Printf("%s: %s\n", jName, val)
 		}
 	}
+
+	*/
 	sets := make(map[string]*json.RawMessage)
 	jThing, err := json.Marshal(vm.VirtualMachineConfig)
 	if err != nil {
@@ -81,11 +83,10 @@ func pveVersion(c *cli.Context) error {
 				k, s,
 			},
 		)
-		// fmt.Printf("%s: %s\n", k, s)
 
 	}
 
-	// logrus.Infof("%#v\n", vm.VirtualMachineConfig)
-	fmt.Println(tw.Render())
+	logrus.Infof("\n" + tw.Render())
+	// fmt.Println(tw.Render())
 	return nil
 }
