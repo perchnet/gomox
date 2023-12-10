@@ -86,7 +86,7 @@ func pveVersion(c *cli.Context) error {
 
 	}
 
-	logrus.Infof(tw.Render())
+	logrus.Infof("\n" + tw.Render())
 	// fmt.Println(tw.Render())
 	return nil
 }
