@@ -21,7 +21,13 @@ func CheckVmidRange(vmid uint64) error {
 }
 
 func GetVmidArg(args []string) (uint64, error) {
+	if len(args) == 0 {
+		return 0, VmidOutOfRangeError()
+	}
 	ivmid, err := strconv.Atoi(args[0])
+	if err != nil {
+		return 0, VmidOutOfRangeError()
+	}
 	err = CheckVmidRange(uint64(ivmid))
 	if err != nil {
 		return 0, VmidOutOfRangeError()
