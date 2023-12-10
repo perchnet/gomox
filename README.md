@@ -1,4 +1,4 @@
-# gomox
+# gomox [![Go](https://github.com/perchnet/gomox/actions/workflows/go.yml/badge.svg)](https://github.com/perchnet/gomox/actions/workflows/go.yml)
 
 WIP CLI client for Proxmox VE, written in Go with [go-proxmox](https://github.com/luthermonson/go-proxmox) [![Go Reference](https://pkg.go.dev/badge/github.com/perchnet/gomox.svg)](https://pkg.go.dev/github.com/perchnet/gomox)
 
