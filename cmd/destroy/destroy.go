@@ -14,18 +14,6 @@ var Command = &cli.Command{
 	Usage:  "Delete a virtual machine",
 	Action: destroyVmCmd,
 	Flags: []cli.Flag{
-		&cli.Uint64Flag{
-			Name:     "vmid",
-			Usage:    "`VMID` to delete",
-			Required: true,
-			Aliases:  []string{"v"},
-			Action: func(c *cli.Context, vmid uint64) error {
-				if vmid < 100 || vmid > 999999999 {
-					return fmt.Errorf("VM vmid %d out of range", vmid)
-				}
-				return nil
-			},
-		},
 		&cli.BoolFlag{
 			Name:  "force",
 			Usage: "If the VM is not stopped, stop before attempting removal.",
@@ -47,7 +35,11 @@ func destroyVmCmd(c *cli.Context) error {
 			Realm:    c.String("pverealm"),
 		},
 	)
-	vmid := c.Uint64("vmid")
+
+	vmid, err := util.GetVmidArg(c.Args().Slice())
+	if err != nil {
+		return err
+	}
 
 	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {
