@@ -43,30 +43,6 @@ func pveVersion(c *cli.Context) error {
 	tw := table.NewWriter()
 	// append a header row
 	tw.AppendHeader(table.Row{fmt.Sprintf("vm: %d", vmid), fmt.Sprintf("node: %s", vm.Node)})
-	// append some data rows.
-	// config := *vm.VirtualMachineConfig
-	/*v := reflect.ValueOf(config)
-	typeOfS := v.Type()
-
-	for i := 0; i < v.NumField(); i++ {
-		name := typeOfS.Field(i).Name
-		val := v.Field(i).Interface()
-		jVal, err := json.Marshal(val)
-		if err != nil {
-			return err
-		}
-		jName, err := json.Marshal(name)
-		_ = jName
-		if err != nil {
-			return err
-		}
-		if len(jVal) > 2 && string(jVal) != "null" {
-
-			// fmt.Printf("%s: %s\n", jName, val)
-		}
-	}
-
-	*/
 	sets := make(map[string]*json.RawMessage)
 	jThing, err := json.Marshal(vm.VirtualMachineConfig)
 	if err != nil {
@@ -78,6 +54,7 @@ func pveVersion(c *cli.Context) error {
 	}
 	for k, v := range sets {
 		s := strings.Trim(string(*v), "\"")
+		// append some data rows.
 		tw.AppendRow(
 			table.Row{
 				k, s,

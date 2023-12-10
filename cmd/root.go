@@ -6,6 +6,7 @@ import (
 	"github.com/b-/gomox/cmd/destroy"
 	"github.com/b-/gomox/cmd/list"
 	"github.com/b-/gomox/cmd/pveVersion"
+	"github.com/b-/gomox/cmd/set"
 	"github.com/b-/gomox/cmd/start"
 	"github.com/b-/gomox/cmd/stop"
 	"github.com/b-/gomox/cmd/taskstatus"
@@ -22,5 +23,6 @@ func Commands() cli.Commands {
 		taskstatus.Command,
 		list.Command,
 		config.Command,
+		set.Command,
 	}
 }
