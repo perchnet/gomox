@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/kr/pretty"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 )
@@ -228,26 +227,6 @@ func WaitTask(ctx context.Context, task *proxmox.Task, opts ...WaitOption) (err 
 
 	for {
 		select {
-		/*
-			case <-timeoutExpired:
-				watch <- taskMsgPrefix(*task, fmt.Sprintln("Timeout expired!"))
-				if c.pollingConfig.stopTaskOnTimeout {
-					_ = task.Stop(ctx)
-				}
-				break
-
-		*/
-
-		/*
-			case <-ticker.C:
-				polledStatus, _ := TaskStatus(ctx, *task)
-				if task.IsRunning {
-					logrus.Debugln(polledStatus)
-				}
-				return
-
-		*/
-
 		// receive new task data
 		case ln, ok := <-watch:
 			if !ok {
@@ -257,7 +236,7 @@ func WaitTask(ctx context.Context, task *proxmox.Task, opts ...WaitOption) (err 
 			newMsg = taskMsgPrefix(*task, ln)
 			if msg != newMsg {
 				msg = newMsg
-				// logrus.Infoln(msg)
+				logrus.Debugln(msg)
 				s.Suffix = " " + msg
 			}
 		}
@@ -271,14 +250,30 @@ func WaitTask(ctx context.Context, task *proxmox.Task, opts ...WaitOption) (err 
 }
 
 func taskMsgPrefix(task proxmox.Task, msg string) string {
-	return fmt.Sprintf("(%s) %s\n", task.Type, msg)
+	if msg == NoContent {
+		msg = genericMsg(task)
+	}
+	return fmt.Sprintf("%s (%s): %s\n", task.Type, task.ID, msg)
+}
+
+func genericMsg(task proxmox.Task) string {
+	var taskMsg string
+	switch {
+	case task.IsFailed:
+		taskMsg = "failed"
+	case task.IsSuccessful:
+		taskMsg = "successful"
+	default:
+		taskMsg = task.Status
+	}
+	return taskMsg
 }
 
 // TaskStatus updates the task and returns a message explaining the task's
 // status
 func TaskStatus(ctx context.Context, task proxmox.Task) (string, error) {
-	err := task.Ping(ctx)                               // Update task.
-	msg := fmt.Sprintf("%#v\n", pretty.Formatter(task)) // TODO: Improve task status formatting
+	err := task.Ping(ctx) // Update task.
+	msg := genericMsg(task)
 	if task.IsFailed {
 		err = fmt.Errorf("the task has failed")
 	}

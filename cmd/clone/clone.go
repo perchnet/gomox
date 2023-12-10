@@ -100,6 +100,9 @@ func cloneVm(c *cli.Context) error {
 	)
 
 	vmid, err := util.GetVmidArg(c.Args().Slice())
+	if err != nil {
+		return err
+	}
 
 	vm, err := util.GetVirtualMachineByVMID(c.Context, vmid, client)
 	if err != nil {

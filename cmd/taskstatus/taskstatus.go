@@ -1,6 +1,8 @@
 package taskstatus
 
 import (
+	"fmt"
+
 	"github.com/b-/gomox/tasks"
 	"github.com/b-/gomox/util"
 	"github.com/luthermonson/go-proxmox"
@@ -8,17 +10,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const UsageText = "gomox [-w] taskstatus <UPID>"
+
 var Command = &cli.Command{
-	Name:   "taskstatus",
-	Usage:  "Get the status of a given task, by UPID",
-	Action: taskStatusCmd,
+	Name:      "taskstatus",
+	Usage:     "Get the status of a given task, by UPID",
+	UsageText: UsageText,
+	Action:    taskStatusCmd,
 	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:     "upid",
-			Usage:    "Proxmox task ID (`UPID`) to get the status for.",
-			Required: true,
-			Aliases:  []string{"t"},
-		},
 		&cli.IntFlag{
 			Name:     "timeout",
 			Category: "wait",
@@ -45,8 +44,12 @@ func taskStatusCmd(c *cli.Context) error {
 			Realm:    c.String("pverealm"),
 		},
 	)
+	if len(c.Args().Slice()) == 0 {
+		return fmt.Errorf("Usage: " + UsageText)
+	}
+	upid := c.Args().First()
 	tailMode := c.Bool("wait")
-	task := proxmox.NewTask(proxmox.UPID(c.String("upid")), &client)
+	task := proxmox.NewTask(proxmox.UPID(upid), &client)
 
 	taskStatus, err := tasks.TaskStatus(c.Context, *task)
 	if err != nil {
