@@ -1,7 +1,7 @@
 package pveVersion
 
 import (
-	"github.com/b-/gomox/util"
+	"github.com/perchnet/gomox/util"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"

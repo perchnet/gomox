@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/b-/gomox/util"
+	"github.com/perchnet/gomox/util"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"

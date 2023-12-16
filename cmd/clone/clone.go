@@ -3,9 +3,9 @@ package clone
 import (
 	"fmt"
 
-	"github.com/b-/gomox/cmd/taskstatus"
-	"github.com/b-/gomox/tasks"
-	"github.com/b-/gomox/util"
+	"github.com/perchnet/gomox/cmd/taskstatus"
+	"github.com/perchnet/gomox/tasks"
+	"github.com/perchnet/gomox/util"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"

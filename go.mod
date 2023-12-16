@@ -1,4 +1,4 @@
-module github.com/b-/gomox
+module github.com/perchnet/gomox
 
 go 1.21.3
 

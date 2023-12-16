@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/b-/gomox/cmd/taskstatus"
-	"github.com/b-/gomox/util"
+	"github.com/perchnet/gomox/cmd/taskstatus"
+	"github.com/perchnet/gomox/util"
 	"github.com/luthermonson/go-proxmox"
 	"github.com/urfave/cli/v2"
 )

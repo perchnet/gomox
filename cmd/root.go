@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"github.com/b-/gomox/cmd/clone"
-	"github.com/b-/gomox/cmd/config"
-	"github.com/b-/gomox/cmd/destroy"
-	"github.com/b-/gomox/cmd/list"
-	"github.com/b-/gomox/cmd/pveVersion"
-	"github.com/b-/gomox/cmd/set"
-	"github.com/b-/gomox/cmd/start"
-	"github.com/b-/gomox/cmd/stop"
-	"github.com/b-/gomox/cmd/taskstatus"
+	"github.com/perchnet/gomox/cmd/clone"
+	"github.com/perchnet/gomox/cmd/config"
+	"github.com/perchnet/gomox/cmd/destroy"
+	"github.com/perchnet/gomox/cmd/list"
+	"github.com/perchnet/gomox/cmd/pveVersion"
+	"github.com/perchnet/gomox/cmd/set"
+	"github.com/perchnet/gomox/cmd/start"
+	"github.com/perchnet/gomox/cmd/stop"
+	"github.com/perchnet/gomox/cmd/taskstatus"
 	"github.com/urfave/cli/v2"
 )
 
