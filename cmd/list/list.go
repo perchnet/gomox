@@ -3,9 +3,9 @@ package list
 import (
 	"fmt"
 
-	"github.com/perchnet/gomox/util"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/luthermonson/go-proxmox"
+	"github.com/perchnet/gomox/util"
 	"github.com/urfave/cli/v2"
 )
 
@@ -56,7 +56,7 @@ func list(c *cli.Context) error {
 	// simple table with zero customizations
 	tw := table.NewWriter()
 	// append a header row
-	tw.AppendHeader(table.Row{"VMID", "Name", "Type", "Status", "Mem (MB)", "BootDisk (GB)", "PID"})
+	tw.AppendHeader(table.Row{"VMID", "Name", "Status", "Mem (MB)", "BootDisk (GB)", "PID"})
 	// append some data rows
 
 	for _, vm := range rsList {
